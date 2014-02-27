@@ -5,4 +5,4 @@ OpenStack-Havana houses Chef cookbooks originally created by RackSpace Private C
 local deployment with specified recipes.  
 
 2014-02-26: Add HA across multiple silos.
-2014-02-27: Add openvswitch recipe for compuet nodes.
+2014-02-27: Add openvswitch recipe for compute nodes.
