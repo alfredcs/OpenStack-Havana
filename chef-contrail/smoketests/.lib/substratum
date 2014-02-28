@@ -1,0 +1,26 @@
+# Mix-in unixbox for SSH.
+source $(dirname $0)/.lib/unixbox
+SSH_PORT=22 USER=cloudscaling new substratum is unixbox 172.17.0.10
+
+function substratum.cli {
+    substratum "$@"
+}
+
+# Update the zone manager with deployment metdata.
+function substratum:deployment::new {
+    tee /tmp/deploy.json >/dev/null
+    self=$1; shift
+
+    # Substratum gives us the uuid from its stdout.
+    uuid=$(substratum.cli deployment import -f /tmp/deploy.json |
+        sed -n '/^import/{ s/^import //; s/\.\.\.SUCCESS//; p; }')
+    instance_var $self uuid $uuid
+}
+
+function substratum.get_machine_ip {
+    MACHINE=$1
+    INTERFACE=$2
+    substratum machine show $MACHINE | sed '1{ s/.*\.\.\.//; };' | python -c \
+        "import json; import sys; print filter(lambda x: x['name']=='$INTERFACE',
+         json.load(sys.stdin)['interfaces'])[0]['addresses'][0]"
+}

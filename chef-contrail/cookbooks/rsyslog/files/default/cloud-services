@@ -1,0 +1,48 @@
+#!/bin/bash
+
+SERVICES_TO_START="rsyslog keystone glance-registry glance-api nova-zmq-receiver nova-network nova-scheduler nova-cert nova-api nova-compute swift-proxy"
+SERVICES_TO_STOP="swift-proxy nova-api nova-cert nova-scheduler nova-network nova-zmq-receiver nova-compute glance-api glance-registry keystone rsyslog"
+
+function start_services {
+	for service in $SERVICES_TO_START; do
+ 		if [ -f "/etc/init/$service.conf" ]; then
+			$1 $service || true
+		else
+			echo "$service is not installed and was not started."
+                fi
+	done
+}
+
+function stop_services {
+        for service in $SERVICES_TO_STOP; do
+                if [ -f "/etc/init/$service.conf" ]; then
+			$1 $service || true
+		else
+			echo "$service is not installed."
+                fi
+        done
+}
+
+function usage {
+        echo "Usage : $0 start|stop|restart"
+	}
+
+if [ $# -ne 1 ]
+then
+        usage
+        exit
+fi
+
+case $1 in
+        start) 	start_services "start"
+                ;;
+        stop) 	stop_services "stop"
+                ;;
+	status) stop_services "status"
+		;;
+        restart)stop_services "stop"
+                start_services "start"
+            	;;
+	*)	usage
+		exit 1
+esac

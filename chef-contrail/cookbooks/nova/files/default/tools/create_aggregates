@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+AGG_NAME=ocs
+
+source keystonecreds
+
+nova aggregate-create $AGG_NAME &> /dev/null && echo "Aggregate created" || echo "Aggregate already exists"
+
+AGG_ID=$(nova aggregate-list | grep $AGG_NAME | cut -f2 -d' ')
+
+# Add each compute node to the aggregate
+for ip in `python cnodelist`; do
+  nova aggregate-add-host $AGG_ID $ip &>/dev/null && echo "$ip added to aggregate ID $AGG_ID" || echo "$ip already added to aggregate ID $AGG_ID"
+done
+
+# Add all the known flavors to the aggregate
+for flavor in `nova flavor-list | grep True | cut -d '|' -f 3 | tr -d ' '`; do
+  types+="$flavor,"
+done
+
+nova aggregate-set-metadata $AGG_ID instance_type=\'${types%?}\' &> /dev/null && echo "Updated aggregate ID $AGG_ID successfully" || echo "Aggregate ID $AGG_ID update failed, something went wrong"

@@ -1,0 +1,8 @@
+name              "zfs"
+maintainer        "Cloudscaling, Inc."
+maintainer_email  "andrew@cloudscaling.com"
+license           "Apache 2.0"
+description       "Sets up sources for zfs"
+version           "0.99.0"
+supports          "ubuntu"
+recipe            "zfs", "Sets up sources for the node's ubuntu release"

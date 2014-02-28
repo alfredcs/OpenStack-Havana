@@ -1,0 +1,16 @@
+tos minclock <%= @servers.count / 2 %> minsane <%= @servers.count / 2 %>
+<% @servers.each do |s| %>
+server <%= s %> iburst
+<% end %>
+
+<% if @is_server %>
+restrict default nomodify notrap
+restrict 127.0.0.1
+restrict ::1
+restrict <%= @app_cidr.ip %> mask <%= @app_cidr.netmask_ext %>
+
+fudge <%= OCS.app_ip(node) %> stratum 10
+<% end %>
+<% unless node['ntp']['monitor'] %>
+monitor disabled
+<% end %>

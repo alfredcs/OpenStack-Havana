@@ -1,0 +1,6 @@
+[gerrit]
+host=pd.cloudscaling.com
+port=29418
+project=cs-chef.git
+defaultbranch=develop
+

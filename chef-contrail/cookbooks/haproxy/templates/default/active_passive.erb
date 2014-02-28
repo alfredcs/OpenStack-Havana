@@ -1,0 +1,16 @@
+frontend <%= @name %>_frontend
+    bind <%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= @port%>
+<% if node['haproxy'].attribute?('https_listener_ip') %>
+    bind <%= node['haproxy']['https_listener_ip'] %>:<%= @port %> ssl crt <%= node['haproxy']['ssl_certificate'] %>
+<% end %>
+    default_backend <%= @name %>_backend
+
+backend <%= @name %>_backend
+<% OCS.machines_by_role(@role).each_with_index do |m, idx| %>
+  <% if idx == 0 %>
+    server <%= m['hostname'] %> <%= m['application_ip'] %>:<%= @port %> check
+  <% else %>
+    server <%= m['hostname'] %> <%= m['application_ip'] %>:<%= @port %> check backup
+  <% end %>
+<% end %>
+

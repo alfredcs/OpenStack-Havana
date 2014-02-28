@@ -1,0 +1,15 @@
+input {
+  rabbitmq {
+    host => '<%= node['quagga']['ospfd']['app_ecmp_ip'] %>'
+    user => '<%= node['logstash']['rabbitmq_user'] %>'
+    password => '<%= node['logstash']['rabbitmq_pass'] %>'
+    vhost => '<%= node['logstash']['rabbitmq_vhost'] %>'
+    queue => 'logstash-queue'
+    exchange => 'logstash-exchange'
+    key => 'logstash-key'
+    exclusive => false
+    durable => false
+    auto_delete => false
+    ack => true
+  }
+}

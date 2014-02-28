@@ -1,0 +1,5 @@
+[Filters]
+
+mkdir: CommandFilter, /bin/mkdir, root
+chown: CommandFilter, /bin/chown, root
+chmod: CommandFilter, /bin/chmod, root

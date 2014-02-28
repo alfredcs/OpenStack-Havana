@@ -1,0 +1,2 @@
+# cs-chef needs to install to /srv until Substratum moves elsewhere.
+cs-chef binary: dir-or-file-in-srv

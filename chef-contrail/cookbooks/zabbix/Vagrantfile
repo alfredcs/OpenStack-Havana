@@ -1,0 +1,39 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant::Config.run do |config|
+  config.vm.box = "precise64"
+  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+
+  # Optional: apt-cacher-ng
+  #config.vm.provision :shell,
+  #  :inline => 'echo "Acquire::http { Proxy \"http://192.168.2.20:3142\"; };" > /etc/apt/apt.conf.d/000proxy'
+
+  # Install chef 10.26.0:
+  config.vm.provision :shell,
+    :inline => 'apt-get -qq update'
+  config.vm.provision :shell,
+    :inline => 'DEBIAN_FRONTEND=noninteractive ' +
+               'apt-get -qfy install ruby1.9.1-dev make --no-upgrade'
+  config.vm.provision :shell,
+    :inline => 'gem install chef --version 10.26.0 ' +
+               '--no-rdoc --no-ri --conservative'
+
+  # Do the chef thing.
+  config.vm.provision :chef_solo do |chef|
+    chef.cookbooks_path = "../../cookbooks"
+    chef.roles_path = "../../roles"
+    chef.add_role "zabbix_agent"
+    chef.json = {
+      :zabbix_agent => {
+        :servers => ["localhost"],
+        :user_parameters => {
+          'lsb.distrib_id' => 'grep "^DISTRIB_ID=" /etc/lsb-release|cut -d= -f2',
+          'lsb.distrib_release' => 'grep "^DISTRIB_RELEASE=" /etc/lsb-release|cut -d= -f2',
+          'lsb.distrib_codename' => 'grep "^DISTRIB_CODENAME=" /etc/lsb-release|cut -d= -f2',
+          'lsb.distrib_description' => 'grep "^DISTRIB_DESCRIPTION=" /etc/lsb-release|cut -d= -f2'
+        }
+      }
+    }
+  end
+end

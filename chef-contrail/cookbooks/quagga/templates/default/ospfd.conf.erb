@@ -1,0 +1,22 @@
+! -*- ospf -*-
+!
+hostname ospfd
+password 8 <%= node['quagga']['password'] %>
+service password-encryption
+!
+interface <%= node['quagga']['ospfd']['app_ecmp_interface'] %>
+  ip ospf priority 1
+!
+router ospf
+  log-adjacency-changes
+  ospf router-id <%= node['quagga']['ospfd']['router_id'] %>
+  network <%= node['quagga']['ospfd']['block_app_cidr'] %> area <%= node['quagga']['ospfd']['app_ecmp_area'] %>
+<% node['haproxy']['addresses'].each do |ip, desc| %>
+  network <%= ip %> area <%= node['quagga']['ospfd']['app_ecmp_area'] %>
+<% end %>
+  area <%= node['quagga']['ospfd']['app_ecmp_area'] %> export-list ANYCAST_PRIVATE
+  area <%= node['quagga']['ospfd']['app_ecmp_area'] %> import-list ANYCAST_PRIVATE
+!
+<% node['haproxy']['addresses'].each do |ip, desc| %>
+access-list ANYCAST_PRIVATE permit <%= ip %>
+<% end %>

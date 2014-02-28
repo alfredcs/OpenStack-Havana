@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+#export DH_VERBOSE=1
+
+# Pass -j<number> to make if DEB_BUILD_OPTIONS has parallel=<number>:
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	MAKEFLAGS += -j$(NUMJOBS)
+endif
+
+%:
+	dh $@ --parallel
+
+override_dh_auto_build:
+	$(MAKE) tarball
+
+override_dh_auto_install:
+	$(MAKE) install sudo_cmd='' dest_deploy=$(CURDIR)/debian/cs-chef/srv/www/cs-chef.tar.gz
+
+override_dh_auto_test:
+# This here will cause debhelper to run all the foodcritic and knife tests
+# during package builds. It works, but we can do that much more quickly with a
+# separate job where the gem bundle is preinstalled. So, let's leave it out for
+# now.
+#ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+#	bundle install --binstubs --path $(CURDIR)
+#	dh_auto_test
+#endif

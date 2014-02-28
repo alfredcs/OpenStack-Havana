@@ -1,0 +1,10 @@
+IFMAP_SERVER=<%= node['contrail']['ifmap']['ip'] %>
+IFMAP_PORT=<%= node['contrail']['ifmap']['port'] %>
+IFMAP_USER=<%= node['contrail']['app_ip'] %>
+IFMAP_PASWD=<%= node['contrail']['app_ip'] %>
+COLLECTOR=<%= node['contrail']['collector']['ip'] %>
+COLLECTOR_PORT=<%= node['contrail']['collector']['port'] %>
+BGP_PORT=<%= node['contrail']['controller']['bgp_port'] %>
+LOGFILE=--log-file=/var/log/contrail/control.log
+DISCOVERY=<%= node['contrail']['discovery']['ip'] %>
+HOSTIP=<%= node['contrail']['app_ip'] %>

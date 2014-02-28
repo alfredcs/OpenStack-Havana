@@ -1,0 +1,96 @@
+# Nova.conf
+# 
+# Minimal nova.conf file that natter uses to locate the nova database.
+# This nova.conf file should only be used on natter servers as it won't
+# work with any other OpenStack services.
+# 
+
+[DEFAULT]
+verbose=true
+use_syslog=false
+
+#auth strategy (noauth, keystone, depreciated)
+api_paste_config=/etc/nova/api-paste.ini
+auth_strategy=keystone
+keystone_ec2_url=http://localhost/v2.0/ec2tokens
+
+#sudo 
+root_helper=sudo /usr/local/bin/nova-rootwrap
+
+# DHCP Bridge Configuration
+dhcpbridge_flagfile=/etc/nova/nova.conf
+dhcpbridge=/usr/local/bin/nova-dhcpbridge
+
+# Define availability zones
+node_availability_zone=ocs
+
+# RPC Driver
+rpc_backend=cloudscaling.nova.rpc.impl_zmq
+
+
+# ZeroMQ settings
+rpc_zmq_bind_address=0.0.0.0
+rpc_zmq_broker_ip=127.0.0.1
+rpc_zmq_matchmaker=MatchMakerFanoutRing
+rpc_zmq_matchmaker_ringfile=/etc/nova/matchmaker_ring.json
+rpc_zmq_start_port=9500
+
+# Service settings
+s3_host=localhost
+glance_api_servers=localhost
+osapi_compute_listen=localhost
+metadata_listen=localhost
+metadata_host=localhost
+ec2_listen=localhost
+sql_connection=<%= OCS.sql_string(node, 'nova') %>
+
+# Hypervisor
+libvirt_type=kvm
+connection_type=libvirt
+allow_same_net_traffic=false
+libvirt_use_virtio_for_bridges=True
+
+# Network manager
+public_interface=eth0
+vlan_interface=eth0
+routing_source_ip=localhost
+force_dhcp_release=true
+network_manager=l3network.l3manager.L3Manager
+flat_interface=bond0
+linuxnet_interface_driver=l3network.l3linuxbridgedriver.L3LinuxBridgeInterfaceDriver
+libvirt_vif_driver=l3network.l3vifdriver.LibvirtL3BridgeDriver
+host=localhost
+
+# Misc path settings
+lock_path=/var/lib/nova/tmp
+logdir=/var/log/nova
+state_path=/var/lib/nova
+instances_path=/var/lib/nova/instances
+ca_path=/var/lib/nova/CA
+
+# Scheduler settings
+scheduler_available_filters=nova.scheduler.filters.standard_filters      
+scheduler_available_filters=instance_scheduler.cs_compute_filter.CSComputeFilter 
+scheduler_default_filters=AvailabilityZoneFilter,RamFilter,ComputeFilter,CoreFilter,CSComputeFilter
+ram_allocation_ratio= 1.0
+reserved_host_memory_mb= 3072
+cpu_allocation_ratio= 2.0
+noop_cost_fn_weight=0.0
+compute_fill_first_cost_fn_weight=-10
+
+# Use the old auth scheme
+use_deprecated_auth=true
+
+use_ipv6=false
+
+# Quota
+quota_metadata_items=-1
+quota_max_injected_file_content_bytes=-1
+quota_max_injected_files=-1
+quota_instances=-1
+quota_cores=-1
+quota_ram=-1
+quota_gigabytes=-1
+quota_floating_ips=-1
+quota_volumes=-1
+

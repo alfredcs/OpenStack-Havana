@@ -1,0 +1,53 @@
+<% if node['haproxy'].attribute?('https_listener_ip') %>
+frontend horizon_ssl_frontend
+    bind <%= node['haproxy']['https_listener_ip'] %>:443 ssl crt <%= node['haproxy']['ssl_certificate'] %>
+    bind <%= node['haproxy']['https_listener_ip'] %>:80
+    redirect scheme https if !{ ssl_fc }
+    option forwardfor
+    reqadd X-Forwarded-Protocol:\ https
+    default_backend horizon_backend
+<% end %>
+
+# Swift has it's own IP for now because it wants 80/443 or something.
+<% if node['haproxy'].attribute?('https_s3_ip') %>
+frontend swift_ssl_frontend
+    bind <%= node['haproxy']['https_s3_ip'] %>:443 ssl crt <%= node['haproxy']['ssl_certificate'] %>
+    bind <%= node['haproxy']['https_s3_ip'] %>:80
+    default_backend swift_backend
+<% end %>
+
+frontend horizon_frontend
+    bind <%= node['quagga']['ospfd']['app_ecmp_ip'] %>:80
+    default_backend horizon_backend
+
+backend horizon_backend
+<% OCS.machines_by_role('horizon').each do |m| %>
+    server <%= m['hostname'] %> <%= m['application_ip'] %>:1280 check
+<% end %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'swift', :port => node['swift']['proxy_server']['bind_port'], :role => 'swift_proxy_server' } %>
+
+# We use the active_passive backend because in file backed mode we should only send requests to the master. #TODO have this switch over to simple in swift case.
+<%= render "active_passive.erb", :cookbook => 'haproxy', :variables => { :name => 'glance', :port => node['glance']['api_bind_port'], :role => 'glance' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'nova', :port => 8774, :role => 'nova_controller' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'nova_vnc', :port => node['nova']['novncproxy']['port'], :role => 'nova_vnc', :balance => 'source'} %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'ec2', :port => 8773, :role => 'nova_controller' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'metadata', :port => 8775, :role => 'nova_controller' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'keystone_main', :port => 5000, :role => 'keystone' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'keystone_admin', :port => 35357, :role => 'keystone' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'quantum', :port => node['quantum']['port'], :role => 'quantum' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'cinder', :port => node['openstack_config']['cinder']['server_port'], :role => 'cinder_controller' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'ceilometer', :port => node['ceilometer']['api_port'], :role => 'ceilometer_server' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'heat', :port => node['heat']['api_bind_port'], :role => 'heat' } %>
+
+<%= render "simple_backend.erb", :cookbook => 'haproxy', :variables => { :name => 'heat_cfn', :port => node['heat']['api_cfn_bind_port'], :role => 'heat' } %>

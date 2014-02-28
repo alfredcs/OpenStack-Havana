@@ -1,0 +1,6 @@
+<% sw_command_options = "-K #{node['swift']['super_admin_key']} -A #{node['swift']['proxy_server']['cluster_address']}:#{node['swift']['proxy_server']['bind_port']}/auth/" -%>
+#!/bin/bash
+swauth-prep <%= sw_command_options %>
+swauth-add-user <%= sw_command_options %> -a -r system root testpass
+swauth-list <%= sw_command_options %>
+swauth-list <%= sw_command_options %> system root

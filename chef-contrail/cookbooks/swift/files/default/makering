@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+require 'pathname'
+# Make sure we have the realdirpath because we may be executed via symlink
+path = Pathname.new('/srv/substratum/services/vendor/bundle').realdirpath
+$LOAD_PATH.unshift(path)
+require 'bundler/setup'
+require 'mudbug'
+require 'logger'
+
+debug = ENV['DEBUG'].downcase == 'true' if ENV['DEBUG']
+dry_run = ENV['DRY_RUN'].downcase == 'true' if ENV['DRY_RUN']
+
+log = Logger.new(STDOUT)
+log.level = debug ? Logger::DEBUG : Logger::WARN
+
+ZM = Mudbug.new('substratum')
+ZM.accept(:json)
+
+def machines_for_service(machines, service)
+  machines.select {|m| m['roles'].include? service }.sort_by do |m|
+    m['application_ip'].split('.').map { |octet| octet.to_i}
+  end
+end
+
+hostname = Socket.gethostbyname(Socket.gethostname).first.split('.')[0..1].join('.')
+
+machines = ZM.get('machines').map {|m| ZM.get("machine/#{m['id']}/all_attributes")}
+node = machines.select {|m| m['hostname'] == hostname}
+proxies = machines_for_service(machines, 'swift_proxy_server')
+osds = machines_for_service(machines, 'swift_object_server')
+
+rings = %w{object container account}
+partpower = 18
+replicants = 3
+timeout = 1
+weight = 100
+
+# now we have everything, lets begin
+
+Dir.chdir "/etc/swift"
+
+# Clean up
+log.debug("Cleaning up old ring files")
+%w{*.builder *.ring.gz backups/*.builder backups/*.ring.gz}.each do |glob|
+  Dir.glob(glob).each do |f|
+    log.debug("Deleting #{f}")
+    File.delete(f) unless dry_run
+  end
+end
+
+rings.each_with_index do |ring, ring_idx|
+  svc_port = 6000 + ring_idx
+  # Create ring
+  log.debug("swift-ring-builder #{ring}.builder create #{partpower} #{replicants} #{timeout}")
+  `swift-ring-builder #{ring}.builder create #{partpower} #{replicants} #{timeout}`
+  # For each object server add each of its devices to the ring
+  osds.each_with_index do |osd, osd_idx|
+    osd['traits']['swift']['object_server']['storage_devices'].each_with_index do |device, dev_idx|
+      label = "D#{sprintf '%03d', dev_idx}"
+      log.debug("swift-ring-builder #{ring}.builder add z#{osd_idx+1}-#{osd['application_ip']}:#{svc_port}/#{label} #{weight}")
+      `swift-ring-builder #{ring}.builder add z#{osd_idx+1}-#{osd['application_ip']}:#{svc_port}/#{label} #{weight}` unless dry_run
+    end
+  end
+  # Finally run rebalance on the newly created ring
+  log.debug("swift-ring-builder #{ring}.builder rebalance")
+  `swift-ring-builder #{ring}.builder rebalance` unless dry_run
+end
+
+FileUtils.chown_R 'swift', 'swift', '/etc/swift'
+
+# Copy ring to all proxy servers
+proxies.each  do |proxy|
+  log.debug("sudo -u swift rsync /etc/swift/*.ring.gz #{proxy['application_ip']}::etc_swift")
+  `sudo -u swift rsync /etc/swift/*.ring.gz #{proxy['application_ip']}::etc_swift`
+end
+
+# Copy ring to all object servers
+osds.each  do |osd|
+  log.debug("sudo -u swift rsync /etc/swift/*.ring.gz #{osd['application_ip']}::etc_swift")
+  `sudo -u swift rsync /etc/swift/*.ring.gz #{osd['application_ip']}::etc_swift`
+end

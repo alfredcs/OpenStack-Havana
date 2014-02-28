@@ -1,0 +1,21 @@
+<% if node['swift']['proxy_server']['auth_type'] == "keystone" -%>
+	<% command_options = "-V 2.0 -A #{node['swift']['proxy_server']['keystone']['auth_protocol']}://#{node['swift']['proxy_server']['keystone']['auth_host']}:#{node['swift']['proxy_server']['keystone']['service_port']}/v2.0/ -U #{node['swift']['proxy_server']['keystone']['admin_tenant_name']}:#{node['swift']['proxy_server']['keystone']['admin_user']} -K #{node['openstack_config']['services']['keystone']['user']['admin']['password']}" -%>
+<% else -%>
+	<% command_options = "-A #{node['swift']['proxy_server']['cluster_address']}:#{node['swift']['proxy_server']['bind_port']}/auth/v1.0 -U system:root -K #{node['swift']['super_admin_key']}" -%>
+<% end -%>
+
+#!/bin/bash +x
+
+cd /etc/swift
+swift -v <%= command_options %> stat
+swift -v <%= command_options %> upload testbucket /home/swift/tools/s3boto.py
+swift -v <%= command_options %> list testbucket
+swift -v <%= command_options %> delete testbucket 
+swift -v <%= command_options %> stat
+if [ "$1" == "full" ]; then
+  swift-bench <%= command_options %>
+  cp /home/swift/tools/dispersion.conf /etc/swift
+  swift-dispersion-populate
+  swift-dispersion-report
+  #swift -v <%= command_options %> delete --all
+fi

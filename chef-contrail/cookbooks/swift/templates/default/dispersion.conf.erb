@@ -1,0 +1,11 @@
+[dispersion]
+<% if node['swift']['proxy_server']['auth_type'] == "keystone" -%>
+auth_url = <%= node['swift']['proxy_server']['keystone']['auth_protocol'] %>://<%= node['swift']['proxy_server']['keystone']['auth_host'] %>:<%= node['swift']['proxy_server']['keystone']['service_port'] %>/v2.0/
+auth_user = <%= node['swift']['proxy_server']['keystone']['admin_tenant_name'] %>:<%= node['swift']['proxy_server']['keystone']['admin_user'] %>
+auth_key = <%= node['openstack_config']['services']['keystone']['user']['admin']['password'] %>
+auth_version = 2.0
+<% else -%>
+auth_url = <%= node['swift']['proxy_server']['cluster_address'] %>:<%= node['swift']['proxy_server']['bind_port'] %>/auth/v1.0
+auth_user = system:root
+auth_key = <%= node['swift']['super_admin_key'] %>
+<% end -%>

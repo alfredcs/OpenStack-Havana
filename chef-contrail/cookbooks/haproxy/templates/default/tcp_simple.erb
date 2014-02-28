@@ -1,0 +1,8 @@
+listen <%= @name %>_listen
+    bind <%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= @port%>
+    mode tcp
+    option tcplog
+
+<% OCS.machines_by_role(@role).each do |m| %>
+    server <%= m['hostname'] %> <%= m['application_ip'] %>:<%= @port %> check
+<% end %>

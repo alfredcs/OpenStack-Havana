@@ -1,0 +1,26 @@
+Source: cs-chef
+Section: admin
+Priority: optional
+Maintainer: Cloudscaling <engineering@cloudscaling.com>
+Build-Depends: debhelper (>= 8.0.0),
+ ocs-basefiles,
+#Uncomment these if you want to run tests in-package:
+# bundler,
+# libxml2-dev,
+# libxslt1-dev,
+# python-gflags,
+# ruby-i18n,
+# ruby-libxml,
+# ruby1.9.1,
+# ruby1.9.1-dev,
+# rubygems-integration
+# ^^^ gem list is incomplete, but bundler covers it up.
+Standards-Version: 3.9.4
+Homepage: http://cloudscaling.com
+Vcs-Git: ssh://pd.cloudscaling.com:29418/cs-chef.git
+Vcs-Browser: https://pd.cloudscaling.com/codereview/gitweb?p=cs-chef.git
+
+Package: cs-chef
+Architecture: all
+Description: Cloudscaling chef repository
+ Collection of OCS Chef cookbooks to be used with Substratum and mini-boot.

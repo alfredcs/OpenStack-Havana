@@ -1,0 +1,18 @@
+description "Nova cert server"
+author "Joe Gordon<jogo@cloudscaling.com>"
+
+start on (filesystem and static-network-up and started rsyslog)
+stop on runlevel [016]
+
+
+chdir /var/run
+
+pre-start script
+	mkdir -p /var/run/nova
+	chown nova:root /var/run/nova/
+
+	mkdir -p /var/lock/nova
+	chown nova:root /var/lock/nova/
+end script
+
+exec su -c "nova-cert" nova

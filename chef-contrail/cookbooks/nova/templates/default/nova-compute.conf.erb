@@ -1,0 +1,11 @@
+[DEFAULT]
+# Support for L3 Blocked Networks feature
+# Multiple blocked network cidrs can be added via metadata
+# blocked_networks=172.0.0.0/8,192.168.1.0/24
+blocked_networks=<%= @blocked_networks %>
+# Support for L3 Whitelisted Hosts
+# Multiple services can be whitelisted via metadata
+# whitelisted_hosts=172.18.255.253:80,10.33.0.5:443
+whitelisted_hosts=<%= @whitelisted_hosts %>
+dhcpd_domain=<%= node['nova']['udhcpd']['domain'] %>
+dhcpd_search=<%= node['nova']['udhcpd']['search'] %>

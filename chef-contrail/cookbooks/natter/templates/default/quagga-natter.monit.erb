@@ -1,0 +1,29 @@
+check process quagga pidfile /var/run/quagga/ospfd.pid
+  start = "/usr/sbin/service quagga start"
+  stop = "/usr/sbin/service quagga stop"
+
+check process quagga-natter matching ospfd_natter_edge
+  start = "/usr/sbin/service cs-quagga-natter start"
+  stop = "/usr/sbin/service cs-quagga-natter stop"
+  depends quagga
+
+check file natter-pid path /var/run/natterd.pid
+  if changed checksum then exec "/usr/bin/quagga_natter --up --area=<%= node['quagga']['ospfd']['natter_edge_area'] %>"
+
+check process natterd pidfile /var/run/natterd.pid
+  start = "/sbin/initctl start natter"
+  stop = "/sbin/initctl stop natter"
+  depends natter-pid
+  depends quagga
+  depends quagga-natter
+
+check program eth2-up path "/usr/local/bin/check-eth2"
+  if status > 0 then exec "/usr/bin/quagga_natter --down --area=<%= node['quagga']['ospfd']['natter_edge_area'] %>" else if recovered then exec "/usr/bin/quagga_natter --up --area=<%= node['quagga']['ospfd']['natter_edge_area'] %>"
+  depends natterd
+  depends quagga
+
+check program eth3-up path "/usr/local/bin/check-eth3"
+  if status > 0 then exec "/usr/bin/quagga_natter --down --area=<%= node['quagga']['ospfd']['natter_edge_area'] %>" else if recovered then exec "/usr/bin/quagga_natter --up --area=<%= node['quagga']['ospfd']['natter_edge_area'] %>"
+  depends natterd
+  depends quagga-natter
+  depends eth2-up

@@ -1,0 +1,17 @@
+[DEFAULTS]
+# minimim time to allow client to cache service information (seconds)
+ttl_min=600
+
+# maximum time to allow client to cache service information (seconds)
+ttl_max=1200
+
+# hearbeat interval. Client will send ping to discovery server after
+# every interval.
+hc_interval=5
+
+# maximum hearbeats to miss before server will declare publisher out of
+# service.
+hc_max_miss=3
+
+listen_ip_addr=<%= OCS.app_ip(node) %>
+listen_port=9110

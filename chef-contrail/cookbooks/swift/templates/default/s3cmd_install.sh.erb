@@ -1,0 +1,5 @@
+#!/bin/bash
+git clone git://github.com/robertcarr/s3cmd.git
+cd /home/swift/tests/s3cmd
+python setup.py install
+cp <%= node['swift']['home'] %>/tests/s3cfg /root/.s3cfg

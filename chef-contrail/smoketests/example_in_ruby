@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require_relative 'smoketest_driver'
+
+## This file will cause the cs-chef test driver file in the sheep repo to do
+# any setup. The setup currently involves fully imaging a only_one_rack
+# emulation environment.
+
+exit 0
+

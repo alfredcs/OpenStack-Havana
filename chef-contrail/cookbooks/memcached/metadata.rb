@@ -1,0 +1,8 @@
+name              "memcached"
+maintainer        "Cloudscaling, Inc."
+maintainer_email  "joseph@cloudscaling.com"
+license           "Apache 2.0"
+description       "Sets up memcached"
+version           "0.99.0"
+supports          "ubuntu"
+recipe            "memcached", "Sets up memcached"

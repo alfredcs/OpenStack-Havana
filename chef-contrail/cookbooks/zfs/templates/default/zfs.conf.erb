@@ -1,0 +1,1 @@
+options zfs <%= node['zfs']['options'].map { |opt, value| "#{opt}=#{value}" }.join(' ') %>

@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require 'chef'
+
+required_values = {
+  'required' => {
+    :priority_message => 'Must'
+  },
+#  'recommended' => {
+#    :priority_message => 'Should'
+#  },
+#  'optional' => {
+#    :priority_message => 'May'
+#  }
+}
+
+i_metadata = JSON.parse(STDIN.read)
+
+ARGV.each {|cb|
+  next if cb =~ /^\./
+
+  cbfn = ['cookbooks', cb, 'metadata.rb'].join('/')
+
+  next unless File.file?(cbfn)
+
+  md = Chef::Cookbook::Metadata.new()
+  md.from_file(cbfn)
+  mdh = md.to_hash
+
+  attr_by_req = mdh['attributes'].keys.group_by {|a|
+    mdh['attributes'][a]['required']}
+
+  required_values.keys.each {|t|
+    next unless attr_by_req.has_key?(t)
+    attr_by_req[t].each {|a|
+      mdptr = i_metadata
+      attrs = a.split('/').reverse
+      while sv = attrs.pop do
+        if mdptr.has_key?(sv)
+        	mdptr = mdptr[sv]
+        else
+          $stderr.puts "#{required_values[t][:priority_message]} set #{a}"
+          break
+        end
+      end
+    }
+  }
+}

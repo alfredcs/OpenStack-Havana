@@ -1,0 +1,102 @@
+[DEFAULT]
+bind_ip = <%= OCS.app_ip(node) %>
+bind_port = <%= node['swift']['proxy_server']['bind_port'] %>
+user = <%= node['swift']['user'] %>
+workers = <%= node['swift']['proxy_server']['workers'] %>
+swift_dir = /etc/swift
+
+<% if node['swift']['proxy_server']['auth_use_ssl'] -%>
+cert_file = /etc/swift/api-cert.pem
+key_file = /etc/swift/api-key.pem
+<% end -%>
+
+<% if node['swift']['proxy_server']['auth_type'] == "auth" -%>
+[pipeline:main]
+pipeline = catch_errors healthcheck cache auth proxy-server
+
+[app:proxy-server]
+use = egg:swift#proxy
+allow_account_management = true
+log_facility = LOG_LOCAL0
+log_level = <%= node['swift']['log_level'] %>
+
+
+[filter:auth]
+use = egg:swift#auth
+reseller_prefix = <%= node['swift']['proxy_server']['reseller_prefix'] %>
+ip = <%= node['swift']['proxy_server']['auth_ip'] %>
+port = <%= node['swift']['proxy_server']['auth_port'] %>
+<% if node['swift']['proxy_server']['auth_use_ssl'] -%>
+ssl = true
+<% end -%>
+# node_timeout = 10
+<% elsif node['swift']['proxy_server']['auth_type'] == "tempauth" -%>
+[pipeline:main]
+pipeline = catch_errors healthcheck cache swift3 tempauth proxy-server
+
+[filter:tempauth]
+use = egg:swift#tempauth
+user_system_root = testpass .admin <%= node['swift']['proxy_server']['cluster_address'] %>:<%= node['swift']['proxy_server']['bind_port'] %>/v1/AUTH_system
+<% elsif node['swift']['proxy_server']['auth_type'] == "swauth" -%>
+[pipeline:main]
+pipeline = catch_errors healthcheck cache swift3 swauth proxy-server
+
+[filter:swauth]
+use = egg:swauth#swauth
+default_swift_cluster = local#<%= node['swift']['proxy_server']['cluster_address'] %>:<%= node['swift']['proxy_server']['bind_port'] %>/v1
+super_admin_key = <%= node['swift']['super_admin_key']  %>
+<% elsif node['swift']['proxy_server']['auth_type'] == "keystone" -%>
+[pipeline:main]
+pipeline = catch_errors healthcheck cache swift3 s3token authtoken keystoneauth container-quotas account-quotas proxy-logging proxy-server
+
+[filter:proxy-logging]
+use = egg:swift#proxy_logging
+
+[filter:authtoken]
+paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
+<%= render "paste-auth.erb", :cookbook => "keystone", :variables => { :service => "swift" } %>
+signing_dir = /etc/swift
+cache = swift.cache
+delay_auth_decision = 1
+
+[filter:s3token]
+paste.filter_factory = keystone.middleware.s3_token:filter_factory
+<%= render "paste-auth.erb", :cookbook => "keystone", :variables => { :service => "swift" } %>
+
+[filter:keystoneauth]
+use = egg:swift#keystoneauth
+operator_roles = <%= node['swift']['proxy_server']['keystone']['operator_roles'] %>
+<% end -%>
+
+[app:proxy-server]
+use = egg:swift#proxy
+allow_account_management = true
+account_autocreate = True
+log_level = <%= node['swift']['log_level'] %>
+
+[filter:healthcheck]
+use = egg:swift#healthcheck
+
+[filter:catch_errors]
+use = egg:swift#catch_errors
+
+[filter:cache]
+use = egg:swift#memcache
+memcache_servers = <%= @memcached_servers %>
+set log_name = cache
+
+[filter:swift3]
+use = egg:swift3#swift3
+
+[filter:ratelimit]
+use = egg:swift#ratelimit
+<% node['swift']['proxy_server']['ratelimit_settings'].each do |setting,value| -%>
+<%= setting %> = <%= value %>
+<% end -%>
+
+[filter:container-quotas]
+use = egg:swift#container_quotas
+
+[filter:account-quotas]
+use = egg:swift#account_quotas 
+

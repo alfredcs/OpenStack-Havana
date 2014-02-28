@@ -1,0 +1,6 @@
+output {
+  elasticsearch_http {
+    host => '<%= node['quagga']['ospfd']['app_ecmp_ip'] %>'
+    port => <%= node['elasticsearch']['http_port'] %>
+  }
+}

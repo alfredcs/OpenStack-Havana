@@ -1,0 +1,85 @@
+#!/usr/bin/python
+import argparse
+import boto
+import boto.s3.connection
+import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-rk', '--remove-key', metavar=("bucketname", "keyname"), nargs=2)
+parser.add_argument('-cb', '--create-bucket', metavar=("bucketname"))
+parser.add_argument('-db', '--delete-bucket', metavar=('bucketname'))
+parser.add_argument('-nuke', '--nuke', metavar=('bucketname'),help="Deletes bucket and all keys in it.")
+parser.add_argument('-l', '--list', metavar=('bucketname'), help="List all the keys in a bucket.")
+parser.add_argument('-la', '--list-acl', metavar=('bucketname'), help="Shows acls of items in a bucket.")
+parser.add_argument('-lb', '--list-buckets', action="store_true", default=False, help='Lists all the buckets.')
+parser.add_argument('-t', '--tree', action="store_true", default=False, help='Lists all buckets and keys in those buckets.')
+parser.add_argument('-u', '--upload', metavar=('bucketname', 'keyname', 'filepath'), help="Uploads a file.", nargs=3)
+parser.add_argument('-d', '--download', metavar=('bucketname', 'keyname', 'filepath'), help="Downloads a file.", nargs=3)
+parser.add_argument('-a', '--acl', metavar=('bucketname', 'keyname', 'acl'), help="Sets access control list to specified acl string", nargs=3)
+args = parser.parse_args()
+
+connection = boto.connect_s3(
+        aws_access_key_id=os.environ.get('EC2_ACCESS_KEY'),
+        aws_secret_access_key=os.environ.get('EC2_SECRET_KEY'),
+        host=os.getenv('S3_HOST', "<%= node['swift']['proxy_server']['s3_address'] %>"),
+        port=int(os.getenv('S3_PORT', "<%= node['swift']['proxy_server']['bind_port'] %>")),
+        is_secure=False,
+        calling_format=boto.s3.connection.OrdinaryCallingFormat())
+
+if args.create_bucket is not None:
+	bucket = connection.create_bucket(args.create_bucket)
+
+if args.delete_bucket is not None:
+	bucket = connection.delete_bucket(args.delete_bucket)
+
+if args.nuke is not None:
+        bucket = connection.get_bucket(args.nuke)
+	rs = bucket.list()
+        for key in rs:
+                print "deleted: ", key.name
+		bucket.delete_key(key.name)
+	bucket = connection.delete_bucket(args.nuke)
+
+if args.list_buckets:
+	buckets = connection.get_all_buckets()
+	for b in buckets:
+        	print b.name
+
+if args.tree:
+        buckets = connection.get_all_buckets()
+        for b in buckets:
+                print b.name
+		rs = b.list()
+		for key in rs:
+			print "     ", key.name
+
+if args.list is not None:
+	bucket = connection.get_bucket(args.list)
+	rs = bucket.list()
+	for key in rs:
+		print key.name
+
+if args.list_acl is not None:
+        bucket = connection.get_bucket(args.list_acl)
+        rs = bucket.list()
+        for key in rs:
+		acp = key.get_acl()
+		for grant in acp.acl.grants:
+			print key.name, grant.permission
+
+if args.upload is not None:
+	bucket = connection.get_bucket(args.upload[0])
+	key = bucket.new_key(args.upload[1])
+	key.set_contents_from_filename(args.upload[2])
+
+if args.download is not None:
+	key = connection.get_bucket(args.download[0]).get_key(args.download[1])
+	key.get_contents_to_filename(args.download[2])
+
+
+if args.acl is not None:
+	key = connection.get_bucket(args.acl[0]).get_key(args.acl[1])
+	key.set_acl(args.acl[2])
+
+if args.remove_key is not None:
+        key = connection.get_bucket(args.remove_key[0]).delete_key(args.remove_key[1])

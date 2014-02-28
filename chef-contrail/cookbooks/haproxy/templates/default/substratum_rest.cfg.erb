@@ -1,0 +1,9 @@
+frontend substratum_rest_frontend
+    bind <%= OCS.app_ip(node) %>:80
+    default_backend substratum_rest_backend
+
+backend substratum_rest_backend
+
+<% OCS.machines_by_role('substratum').map do |m| %>
+    server <%= m['hostname'] %> <%= m['management_ip'] %>:80 check
+<% end %>

@@ -1,0 +1,17 @@
+#!/bin/bash -e
+if [ -e novarc ]; then
+exit 0
+fi
+source keystonecreds
+EC2_URL=$(keystone catalog --service ec2 | awk '/ publicURL / { print $4 }')
+CREDS=$(keystone ec2-credentials-create)
+export EC2_ACCESS_KEY=$(echo "$CREDS" | awk '/ access / { print $4 }')
+export EC2_SECRET_KEY=$(echo "$CREDS" | awk '/ secret / { print $4 }')
+echo -e "export EC2_ACCESS_KEY=$EC2_ACCESS_KEY\nexport EC2_SECRET_KEY=$EC2_SECRET_KEY\nexport EC2_URL=$EC2_URL\nexport AWS_CONFIG_FILE=/home/nova/tools/awsconfig" > novarc
+
+cat > /home/nova/tools/awsconfig << EOF
+[default]
+aws_access_key_id = $EC2_ACCESS_KEY
+aws_secret_access_key = $EC2_SECRET_KEY
+region = us-east-1
+EOF

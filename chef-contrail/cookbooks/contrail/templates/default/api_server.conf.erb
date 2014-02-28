@@ -1,0 +1,24 @@
+[DEFAULTS]
+ifmap_server_ip=<%= node['contrail']['ifmap']['ip'] %>
+ifmap_server_port=<%= node['contrail']['ifmap']['port'] %>
+ifmap_username=api-server
+ifmap_password=api-server
+cassandra_server_list=<%= node['cassandra']['nodes'].map {|n| "#{n}:#{node['cassandra']['rpc_port']}"}.join(' ') %>
+listen_ip_addr=<%= node['contrail']['api_server']['ip'] %>
+listen_port=<%= node['contrail']['api_server']['backend_port'] %>
+disc_server_ip=<%= node['contrail']['discovery']['ip'] %>
+disc_server_port=<%= node['contrail']['discovery']['port'] %>
+auth=keystone
+multi_tenancy=False
+log_file=/var/log/contrail/api.log
+zk_server_ip=<%= OCS.app_ip(node) %>
+redis_server_ip=<%= node['contrail']['redis']['ip'] %>
+
+[SECURITY]
+use_certs=False
+keyfile=/etc/contrail/ssl/private_keys/apiserver_key.pem
+certfile=/etc/contrail/ssl/certs/apiserver.pem
+ca_certs=/etc/contrail/ssl/certs/ca.pem
+
+[KEYSTONE]
+<%= render "paste-auth-contrail.erb", :cookbook => "keystone", :variables => { :service => "contrail" } %>

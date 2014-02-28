@@ -1,0 +1,5 @@
+#!/bin/bash -e
+export OS_TENANT_NAME=admin
+export OS_USERNAME=admin
+export OS_PASSWORD=<%= node['openstack_config']['services']['keystone']['user']['admin']['password'] %>
+export OS_AUTH_URL="<%= OCS.keystone_internal_endpoint(node) %>"

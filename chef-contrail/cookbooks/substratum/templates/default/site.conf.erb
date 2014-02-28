@@ -1,0 +1,37 @@
+---
+zone_name: <%= @zone['name'] %>
+management_cidr: <%= @zone['management_cidr'] %>
+application_cidr: <%= @zone['application_cidr'] %>
+hardware_cidr: <%= @zone['hardware_cidr'] %>
+isl_cidr: <%= @zone['isl_cidr'] %>
+<% if @zone.has_key?('natter_networks') %>
+natter_count: <%= @zone['natter_networks'].count %>
+<% else %>
+natter_count: 0
+<% end %>
+os_root_password: <%= @zone['os_root_password'] %>
+zone_design: <%= @zone['design'] %>
+ipmi_user: <%= @zone['ipmi_user'] %>
+ipmi_password: <%= @zone['ipmi_password'] %>
+ssh_port: <%= @zone['ssh_port'] %>
+cache_servers:
+<% @cache_servers.each do |ip| %>
+ - <%= "#{ip}:11211" %>
+<% end %>
+db_servers:
+<% @db_servers.each do |ip| %>
+ - <%= "#{ip}:28015" %>
+<% end %>
+<% if @zone['traits'].has_key?('hoof_address') %>
+hoof:
+ address: <%= @zone['traits']['hoof_address'] %>
+ port: <%= @zone['traits']['hoof_port'] %>
+<% end %>
+ntp_servers:
+<% @zone['ntp_servers'].each do |ip| %>
+ - <%= ip %>
+<% end %>
+dns_nameservers:
+<% @zone['dns_nameservers'].each do |ip| %>
+ - <%= ip %>
+<% end %>

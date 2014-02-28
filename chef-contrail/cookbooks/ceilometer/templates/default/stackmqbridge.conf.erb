@@ -1,0 +1,24 @@
+[DEFAULT]
+verbose=true
+use_syslog=true
+
+root_helper=sudo /usr/bin/nova-rootwrap
+
+notification_topics = notifications,glance_notifications
+
+# Host name for service catalog and topics
+host=<%= node['ceilometer']['app_ip'] %>
+rpc_zmq_host=<%= node['ceilometer']['app_ip'] %>
+
+# RabbitMQ settings
+rabbit_hosts=<%= node['nova']['rabbit']['nodes'] %>
+rabbit_userid=<%=  node['nova']['rabbit']['user'] %>
+rabbit_password=<%=  node['nova']['rabbit']['password'] %>
+rabbit_virtual_host=<%=  node['nova']['rabbit']['vhost'] %>
+
+# ZeroMQ settings
+rpc_zmq_bind_address=<%= node['nova']['zmq_bind_address'] %>
+rpc_zmq_broker_ip=<%= node['nova']['zmq_broker_ip'] %>
+rpc_zmq_matchmaker=<%= node['nova']['zmq_matchmaker'] %>
+rpc_zmq_matchmaker_ringfile=<%= node['nova']['zmq_matchmaker_ringfile'] %>
+rpc_zmq_start_port=<%= node['nova']['zmq_start_port'] %>

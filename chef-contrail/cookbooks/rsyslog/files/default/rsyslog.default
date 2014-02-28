@@ -1,0 +1,2 @@
+# -x removes revers DNS lookup
+RSYSLOGD_OPTIONS="-c4 -x"

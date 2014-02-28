@@ -1,0 +1,4 @@
+# custom modules to blacklist from cs-chef metadata
+<% node['kernel']['blacklistmodules'].each do |modulename| -%>
+blacklist <%= modulename %> 
+<% end %>

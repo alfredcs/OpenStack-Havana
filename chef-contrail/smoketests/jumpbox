@@ -1,0 +1,111 @@
+#!/bin/bash -ex
+source $(dirname $0)/.lib/unit_tests
+source $(dirname $0)/.lib/unixbox
+source $(dirname $0)/.lib/substratum
+source $(dirname $0)/.lib/sheep
+
+MACHINE=z4
+
+#
+# Initialization
+#
+new deployment is substratum:deployment <<EOF
+{
+  "name":"jumpbox_test",
+  "roles":["jumpbox", "users"],
+  "traits": {
+    "openssh": {
+      "ListenInterface": [ "eth0", "eth2", "eth3" ],
+      "Port": "22"
+    },
+    "rssh-agent": {
+      "private_key": "SSH PRIVATE KEY HERE"
+    },
+    "users": {
+      "table": {
+        "cloudscaling": { "sudo_access": true },
+        "jdoe": {
+          "comment": "John Doe",
+          "shell": "/bin/bash",
+          "ssh-keys": [
+            "ssh-rsa DEADBEEF"
+          ]
+        }
+      }
+    }
+  }
+}
+EOF
+
+# Errors with set -e, if DEPLOY_UUID if it isn't set.
+#test -z $DEPLOY_UUID
+
+new $MACHINE is sheep:machine z4
+
+#echo "Assigning $MACHINE to jumpbox deployment." >&2
+#$MACHINE.update_deployments $(deployment.uuid)
+
+echo "Launching VM." >&2
+status=$($MACHINE.launch)
+if [[ "$status" =~ 'already running' ]]; then
+    $MACHINE.ssh sudo chef-solo
+fi
+$MACHINE.wait
+
+# Get our first-boot.log
+set +e
+$MACHINE.ssh cat /var/log/firstboot.log >&2
+[ $? -ne 0 ] &&
+    SSH_PORT=22 $MACHINE.ssh cat /var/log/firstboot.log 2>&1
+set -e
+
+#
+# Our tests
+#
+function test_auditd_conf_exists {
+    $MACHINE.ssh sudo test -f /etc/audit/auditd.conf
+}
+
+#function test_auditd_per_user_rules {
+#    $MACHINE.ssh <<....}
+#        sudo grep "" /etc/audit/auditd.conf
+#....}
+#}
+
+function test_jdoe_authkey_exists {
+    $MACHINE.ssh sudo test -f /home/$luser/.ssh/authorized_keys
+}
+
+function test_jdoe_authkey_format {
+    $MACHINE.ssh sudo \
+        grep "ssh-rsa DEADBEEF" /home/$luser/.ssh/authorized_keys >/dev/null
+}
+
+function test_installed_rssh_agent {
+    $MACHINE.ssh test -f /usr/local/bin/rssh-agent
+}
+
+function test_installed_rssh_agentd {
+    $MACHINE.ssh test -f /usr/local/sbin/rssh-agentd
+}
+
+function test_is_running_rssh_agentd {
+    $MACHINE.ssh pgrep rssh-agentd >/dev/null
+}
+
+function test_exists_etc_sudoers {
+    $MACHINE.ssh test -f /etc/sudoers
+}
+
+function test_installed_sudo {
+    $MACHINE.ssh test -f /usr/bin/sudo
+}
+
+function test_wheel_su {
+    $MACHINE.ssh grep '^auth.*pam_wheel' /etc/pam.d/su >/dev/null
+}
+
+function test_uid_min {
+    # Min uid (for managed users) is 10000
+    test "$($MACHINE.ssh id -u jdoe)" -gt 9999
+}

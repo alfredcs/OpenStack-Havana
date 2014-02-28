@@ -1,0 +1,7 @@
+[Filters]
+# l3 filters for route and dhcpd
+route: CommandFilter, /sbin/route, root
+udhcpd: CommandFilter, /usr/sbin/udhcpd, root
+rm: CommandFilter, /bin/rm, root
+cat: CommandFilter, /bin/cat, root
+kill: CommandFilter, /bin/kill, root

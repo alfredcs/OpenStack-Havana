@@ -1,0 +1,4 @@
+ROOTDIR='/srv/substratum/services'
+LOGDIR='/var/log/substratum'
+# Valid service names: rest-api websocket dhcp dns tftp
+ENABLED_SERVICES="<%= node['substratum']['enabled_services'].join(' ') %>"

@@ -1,0 +1,39 @@
+[DEFAULT]
+devices = <%= node['swift']['object_server']['mount_point_root_dir'] %>
+bind_ip = <%= OCS.app_ip(node) %>
+workers = <%= @workers %>
+user = <%= node['swift']['user'] %>
+mount_check = true
+
+[pipeline:main]
+pipeline = <%= @type %>-server
+# pipeline = cbhealth <%= @type %>-server
+
+[app:<%= @type %>-server]
+use = egg:swift#<%= @type %>
+log_facility = LOG_LOCAL0
+log_level = <%= node['swift']['log_level'] %>
+
+[<%= @type %>-replicator]
+
+[<%= @type %>-auditor]
+
+[<%= @type %>-sync]
+
+<% if @type == 'account' -%>
+
+[account-reaper]
+
+[account-stats]
+
+<% else -%>
+
+[<%= @type %>-updater]
+
+<% end -%>
+
+#[filter:cbhealth]
+#use = egg:cb_middleware#cbhealth
+#uri = <%= node['swift']['monitoring']['health_service_url'] %>
+#nb_req_triger = <%= node['swift']['monitoring']['health_service_req_trigger'] %>
+#app = <%= node['swift']['monitoring']['health_service_app'] %>

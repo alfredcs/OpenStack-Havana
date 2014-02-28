@@ -1,0 +1,48 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+#    Copyright 2011 Cloudscaling Group, Inc
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+# Object-Oriented Bash
+# Write classes as functions in the form of "classname.method"
+# Then, call "class classname"
+# Create new objects with "new classname as object_name"
+# Read the examples.
+# -Eric Windisch
+
+function instance_var {
+    self=$1
+    var=$2
+    value=$3
+    eval "function $self.$var { echo \"$value\"; };"
+}
+
+function new {
+    obj=$1; shift
+    [ "$1" == "is" ] && shift  # support optional 'is'
+    cls=$1; shift
+    args=$@
+
+    methods=$(declare -F |
+              sed -n "s/declare -f //; /^${cls}::/{ s/^${cls}:://; p; };")
+
+    eval "function $obj.methods { echo '${methods[*]}'; };"
+    eval "function $obj.set { shift; instance_var \"\$@\"; };"
+
+    for methead in $methods; do
+        eval "function ${obj}.${methead} { ${cls}::${methead} ${obj} \"\$@\"; };"
+    done
+
+    $cls::new $obj "$@"
+}

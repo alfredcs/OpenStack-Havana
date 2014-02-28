@@ -1,0 +1,14 @@
+# natter.conf
+# You may need to manually add routes to the compute nodes in /etc/network/interfaces on this host.
+
+[CONFIG]
+# Public interface for the Public/Floating IPs.
+interface=<%= node['natter_networks']['natter_conf']['public_interface'] %>
+
+# Floating IP cidr
+public_block=<%= node['natter_networks']['natter_conf']['public_block'] %>
+
+# Private cidr for the compute nodes.  Usually a 10.0.0.0/8 block.
+private_block=<%= node['natter_networks']['natter_conf']['private_block'] %>
+
+

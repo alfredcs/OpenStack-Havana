@@ -1,0 +1,343 @@
+cs-chef (0.10.1+0~20140227171357.369+unstable~1.gbp8c4e6c) unstable; urgency=low
+
+  ** SNAPSHOT build @8c4e6c7e877a33653f5f4e629a8fbcf2e953cb51 **
+
+  [ Joseph Glanville ]
+  * Get out of here devstack
+  * Fix device mount on initial morph
+  * Fix up nova tools
+  * Enable blkdev to work with vd* devices (virtio)
+  * Enable support for 2 or less devices in ZFS autogen
+  * Create an apache vhost for Kibana and proxy ElasticSearch
+  * Handle cases where the version string is not in the form 'X.Y.Z'
+  * Disable iptables until it's actually configured
+  * Disable beaver until we upgrade it, it's broken and causing issues
+  * Kibana requires apache2
+  * chkmysqlgalera should only bind to app ip
+  * Add debugging to instance_types, we are seeing weird behavior here
+  * Drastically simplify instance_type creation
+  * Fix MySQL bind port and standalone
+  * Don't populate default instances
+  * Fix bug with MySQL bind fix
+  * Eliminate more usage of syslog
+  * Work around unreliable command for now, make reliable later
+  * Delete stale images
+  * Fix up natter monit config
+  * Revert "Disable beaver until we upgrade it, it's broken and causing issues"
+  * Revert "Prevent Horizon and S3 downgrade attacks"
+  * Set servername to kibana for now
+  * Use SQL to create instance types
+  * Implement Apache WSGI for Openstack
+  * Use ruby-mysql instead
+  * Revert "Implement Apache WSGI for Openstack"
+  * Require the mysql gem to be available to Chef
+  * Go back to using mysql2, no better using mysql
+  * More mysql gem fixes
+  * Force install of libmariadbclient-dev before chef_gem
+  * Use ON DUPLICATE KEY UPDATE
+  * Revert "Ceilometer agent for swift"
+  * Don't disable agent forwarding
+  * Set ZFS settings, tune L2ARC for faster devices
+  * Fix swift logging, also make rsyslog more predictable
+  * Switch to using LIO for iSCSI target
+  * Initial implementation of cluster bootstrap
+  * Move Substratum package install until after site.conf
+  * Increase MySQL startup timeout
+  * Update rethink/substratum stuff to work with clustering better
+  * Replicate to all cluster members, only require N-1 acks.
+  * Replica/Ack must be set on tables not databases
+  * Populate hoof info on chef run
+  * Support clustered NTP.
+  * Fixes for clustered NTP
+  * nitpick: whitespace in ntp.conf
+  * Have chef update the hostname according to DB
+  * Get ntp_servers from zone record, not traits
+  * Remove unused template variable
+  * Slight route refactor, add ISL route
+  * Filter out OSPF advertisements for the ISL CIDR
+  * Do block and ISL routes in Quagga
+  * Properly format ntp_servers etc as YAML
+  * Handle pdnsd custom configuration in Chef
+  * Fix name of dns_nameservers attributes
+  * Change ordering of pdnsd to favor custom servers
+  * Write /etc/default/pdns
+  * Write resolv.conf properly, clean up recipes etc
+  * Typo'd name of pdnsd defaults file
+  * Missed an @
+  * Use mgmt ip for resolv.conf
+  * Enable clustered DNS
+  * Expand whitelisted services for port based proxy
+  * Include openstack_config in nova attributes
+  * Install python-novaclient
+  * nova: Update filter:authtoken in api-paste
+  * keystone => keystoneclient
+  * Dirty hack to make develop work
+  * Unindent not in std lib apparently
+  * Writes sudoers in chef
+  * Derp sudoers
+  * Fix mode on sudoers
+  * Use app_ecmp_ip for apt-cacher
+  * Hardcode ports for now, fix with Services
+  * Derp rebase
+  * Enable the nova RetryFilter
+  * Use new havana driver
+  * Install python-mysqldb in mysql::client
+  * Slight typo in port whitelisting
+  * nova-novncproxy is now called nova-consoleproxy
+  * Start and enable RethinkDb
+  * Write /etc/default/substratum
+  * Work around bad nova package
+  * Typo in attribute
+  * Set image_conversion_dir, default is weird in Havana
+  * Acks can safely be same as replicas, giving us 100% sync MM
+  * Power up logstash
+  * Fix typo in beaver config
+  * Make sure logstash is started
+  * Cleanup usage of attribute files
+  * Correct bug in getting workers for obj nodes
+  * Clean up cassandra cookbook
+  * More cleanups
+  * Cleanup zookeeper cookbook
+  * Remove unused attribute in swift
+  * package openstack-dashboard no longer in use
+  * Refactor RabbitMQ
+  * Remove more useless attributes
+  * Fix rebase error
+  * Install missing dep for Horizon
+  * Keystone public port should be 5000
+  * Fix up ntp monitor fix
+  * Use the new optimized collection endpoint
+  * Fix Horizon SSL redirecting to HTTP
+  * Just install openstash-dashboard for now
+  * Fix up beaver paths
+  * Support setting l3 dhcpd settings via nova-compute.conf
+  * Add vhost support to RabbitMQ policy LWRP
+  * Add new RabbitMQ plugin LWRP
+  * Enable the RabbitMQ management plugin
+  * Update policy to use /nova vhost and setup expires.
+  * Enable memcached for Substratum
+  * Clean up some roles etc, get ready to bust up *_controller
+  * Delete unused roles
+  * Add a RethinkDB admin library
+  * Use new RethinkDB admin client to configure Substratum DB
+  * Set RethinkDB machine-name
+  * quantum: Remove some unused attributes
+  * Use new Django cache specification
+  * Force redirect to SSL
+  * Write memcached servers in single quotes
+  * Unify all places where keystone admin_password is used
+  * Delete data that is now set by Substratum
+  * Delete cinder password
+  * Fix copy paste error
+  * Delete more hard-coded password
+  * Remove hand-coded keystone settings
+  * Fix up glance stuff to use more sane defaults
+
+  [ Benjamin Staffin ]
+  * Add ocs-basefiles build dep, comment out others
+  * Move su pam.d file to more generic location
+
+  [ travis ]
+  * CS-Bug: CB-2550 Enable anonymous access to swift objects by default.
+
+  [ Abhishek Chanda ]
+  * Make iptables cookbook work
+  * Make monit listen on app ip CB-3351
+  * Chef cleanup
+  * First round of cleanups
+  * Add graphite
+  * Remove all traces of runit
+  * Removed some unused roles
+  * Contrail changes for new packages
+  * Ugly hack to include contrail repo
+  * Quantum changes for contrail
+  * Make contrail repo point to amd64 only
+  * Update file name
+  * Add missing package
+  * Fixed my derp
+  * Format cassandra server list properly
+  * Contrail changes with supervisord
+  * Default stack size has to be more than 160k with 7
+  * Remove deprecated option
+  * Move to supervisord
+  * Remove files which are not needed
+  * Add new contrail roles due to package simplification
+  * Update recipes for packaging changes
+  * Cleanup
+  * Change name of attribute
+  * Fix my spelling derp
+  * Removed stuff
+  * This works this way, contrail knows why
+  * Do not install contrail horizon stuff for now
+  * Redis fixes for contrail
+  * Remove contrail horizon stuff
+  * Contrail needs the service tenant
+  * Remove unused files
+  * Redis changes for contrail
+  * Create directory before trying to write file
+  * Contrail derp fixed
+  * More contrail derp in webui config
+  * Fix more derp
+  * Increase stack size
+  * More changes to webui config
+  * Put a log level for webui
+  * Fix for contrail tenant name
+  * Contrail uses admin user
+  * Add contrail repo
+  * Chef changes for contrail's role based packages
+  * Revert "Fix for contrail tenant name"
+  * Make contrail discovery HA
+  * Make discovery listen on app ip
+  * Add discovery HA to roles
+  * Add a new role to make contrail discovery HA in c node
+  * Append new entries to basicauthusers
+  * Do not compile this
+  * Contrail wants tenant name to be admin
+  * Check name of service
+  * Properly fix tenant and user names for contrail
+  * Manage basicauthuser
+  * Install contrail repo key everywhere
+  * Do not block on api server, it can fix itself
+  * Contrail delimits on space
+  * Install contrail key before updating
+  * Remove provisioning scripts for now
+  * Enable logging for memcached
+  * Cleanups
+  * Contrail changes for multi z nodes
+  * Fix typos and include new haproxy config
+  * Add listen port (again)
+  * Cassandra needs space here too, who knew
+  * Because contrail does not always know what options needs to be passed
+  * Use app ips
+  * Collector too
+  * Use first zm app ip for redis
+  * Add metadata shared secret
+  * Update as number
+
+  [ Blake Barnett ]
+  * Fix format of ocs_release (should be only the X.Y.Z version string)
+  * Use the new APT repo scheme by default
+  * Initial substratum users integration
+  * Fix syntax error in nova api recipe
+  * Work-around a chef bug: https://tickets.opscode.com/browse/CHEF-3912
+  * Explicitly install rtslib-fb
+  * Fix invalid bash syntax in rabbitmq join_cluster
+  * Create a zm_cluster_ips library method and use it for rethinkdb/substratum recipes
+  * Pass in node object
+  * Revert "Pass in node object"
+  * Revert "Create a zm_cluster_ips library method and use it for rethinkdb/substratum recipes"
+  * replicas is supposed to be count?  *shrug*
+  * Add mgmt routes in the substratum recipe for znodes
+  * Switch to use the app cidr in the ntp template
+  * Add ntp and dns name servers to the chef site.conf
+  * Add mariadb-galera preseed keys
+  * Temp work-around for preseeding mysteries
+  * Fix quoting for sql
+  * Add the rest of the packages cs-zone-manager depended on
+  * cs-chef doesn't depend on substratum, it's the other way around
+  * Make substratum_rest API clustered via the APP IP
+  * Set openjdk to version 7 by default
+  * Add substratum_rest to the api_resilience role
+  * Remove rotate option from resolv.conf, it's causing breakage
+  * Use the discovery.conf template
+  * Only add proxy config if we're not running substratum
+  * Stop using substratum_location.txt (use substratum dns name)
+  * Add the -updates and -security repos for /ocs
+  * Revert "Contrail uses admin user"
+  * Load mudbug from the substratum bundle
+  * Make beaver use the machine's fqdn for source_host in logstash
+  * Add beaver config for substratum logs
+  * Wow I thought all the block manager stuff was long gone
+  * Fix patterns_dir for apache filters
+
+  [ Hans ]
+  * Fix for CB-3364
+  * CS-Bug: CB-3382 Add a quicker test
+  * Add v3 API to keystone
+  * PKI tokens not working switched back to UUID
+  * Added a customizable policy.json for v3 api
+  * Added ceilometer_secret support
+
+  [ Eric Windisch ]
+  * Rsyncd should only listen on application ip
+  * Remove udhcpd from sudoers
+  * Only listen for rsync on application ip (rsyncd.swift.conf)
+  * Remove unused rsyncd.conf.erb file
+  * Set availability zone for cinder
+  * EC2 instance types should not have 30GB root_gb
+  * Prevent Horizon and S3 downgrade attacks
+  * Ceilometer agent for swift
+  * Remove non-keystone auth for swift
+  * Delete swift demo, start role and recipes
+  * Revert "Remove non-keystone auth for swift"
+  * Swift user should be in ceilometer group
+  * Add ceilometer_agent to swift proxy server
+
+  [ Tushar Kalra ]
+  * Fix nova novncproxy
+  * Changing nova and keystone logging to debug
+  * enable dispersion scheduler
+  * Enabling cinder backup-create
+  * Ensure FQDN is used for all rsyslogs
+  * Revert glance notification fix
+  * log_level for all services to be set independently
+
+  [ Rodolphe Pineau ]
+  * Fix for CB-3617
+  * Fix for CB-3917
+
+  [ Mike ]
+  * zfs: echo parameters to /sys as well as modprobe conf
+  * glance: Edit conf file to specify rabbit host correctly
+  * beaver: Add retry delay configuration
+
+  [ Rick Hull ]
+  * add --no-document option for gem command
+
+  [ James Maniotis ]
+  * fix local contrail repo IP
+  * fix for contrail webui
+  * rudra corrects the name of the pkg
+  * control & dns param changes from rudra
+
+  [ Alexandre Levine ]
+  * Initial heat service commit.
+  * Heat watchcondition, sudoers and auth_encryption_key fixes.
+
+  [ jenkins-debian-glue Autobuilder ]
+
+ -- jenkins-debian-glue Autobuilder <jenkins@lab10.b0.hc.cloudscaling.com>  Thu, 27 Feb 2014 17:15:29 +0000
+
+cs-chef (0.10.1) unstable; urgency=low
+
+  * Initial post-sheep native packaging.
+
+ -- Benjamin Staffin <ben@cloudscaling.com>  Mon, 18 Nov 2013 12:59:24 -0800
+
+cs-chef (0.10.0) unstable; urgency=low
+
+  * Cleanup a bunch of crufty ancient stuff
+
+ -- Blake Barnett <bdb@cloudscaling.com>  Wed, 17 Jul 2013 17:03:14 +0000
+
+cs-chef (0.9.3) unstable; urgency=low
+
+  * Fixes for glance test image upload
+  * Swift fixes for pilot deployments
+  * Natter fixes
+  * Upgrade 1.3 -> 1.4 fixes
+  * APT URL changes to use apt-cacher-ng
+  * Switch swift, cs-zeromq-rpc and cs-layer to use debs
+  * Support service password encryption for zebra (quagga)
+
+ -- Blake Barnett <bdb@cloudscaling.com>  Mon, 31 Oct 2012 16:20:55 -0700
+
+cs-chef (0.9.2) unstable; urgency=low
+
+  * Switch openstack to use deb packages in most places
+  * Change VM guest image to CirrOS 0.3.0 for tests and installs
+  * Make sure block managers get mongoose installed to handle static files (for TFTP)
+  * Fix APT get update behavior when installing a sources.list
+  * Minor bugfixes
+
+ -- Blake Barnett <bdb@cloudscaling.com>  Tue, 9 Oct 2012 10:31:35 -0700

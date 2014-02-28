@@ -1,0 +1,85 @@
+[client]
+port = <%= node['mysql']['port'] %>
+socket = <%= node['mysql']['socket'] %>
+
+[mysqld_safe]
+socket = <%= node['mysql']['socket'] %>
+nice = 0
+
+[mysqld]
+user = mysql
+pid-file = <%= node['mysql']['pid_file'] %>
+socket = <%= node['mysql']['socket'] %>
+port = <%= node['mysqld']['port'] %>
+basedir = /usr
+datadir = <%= node['mysql']['data_dir'] %>
+tmpdir = /tmp
+bind-address = <%= node['mysql']['bind_address'] %>
+log_error = /var/log/mysql.err
+# Skip reverse DNS lookup of clients
+<% if node.mysql.skip_name_resolve -%>
+skip-name-resolve
+<% else -%>
+#skip-name-resolve
+<% end -%>
+
+wsrep_provider = /usr/lib/galera/libgalera_smm.so
+wsrep_provider_options = "<%= node['mysql']['wsrep_provider_options']%>"
+<% if node['mysql']['bootstrap'] || node['mysql']['standalone'] %>
+wsrep_cluster_address = gcomm://
+<% else %>
+wsrep_cluster_address = gcomm://<%= node['mysql']['nodes'] %>
+<% end %>
+wsrep_sst_method = rsync
+wsrep_sst_auth = <%= node['mysql']['wsrep_sst_auth'] %>
+wsrep_node_address = <%= node['mysql']['bind_address'] %>:<%= node['mysql']['gcomm_port'] %>
+binlog_format=ROW
+default_storage_engine=InnoDB
+innodb_autoinc_lock_mode=2
+innodb_locks_unsafe_for_binlog=1
+
+key_buffer = <%= node['mysql']['key_buffer'] %>
+max_allowed_packet = <%= node['mysql']['max_allowed_packet'] %>
+max_heap_table_size = <%= node['mysql']['max_heap_table_size'] %>
+myisam_sort_buffer_size = <%= node['mysql']['myisam_sort_buffer_size'] %>
+net_read_timeout = <%= node['mysql']['net_read_timeout'] %>
+net_write_timeout = <%= node['mysql']['net_write_timeout'] %>
+read_buffer = <%= node['mysql']['read_buffer'] %>
+sort_buffer = <%= node['mysql']['sort_buffer'] %>
+table_cache = <%= node['mysql']['table_cache'] %>
+table_open_cache = <%= node['mysql']['table_open_cache'] %>
+thread_cache_size = <%= node['mysql']['thread_cache_size'] %>
+thread_concurrency = <%= node['mysql']['thread_concurrency'] %>
+thread_stack = <%= node['mysql']['thread_stack'] %>
+read_rnd_buffer_size = <%= node['mysql']['read_rnd_buffer_size'] %>
+wait_timeout = <%= node['mysql']['wait_timeout'] %>
+connect_timeout = <%= node['mysql']['connect_timeout'] %>
+interactive_timeout = <%= node['mysql']['interactive_timeout'] %>
+max_connections = <%= node['mysql']['max_connections'] %>
+log_warnings = 0
+myisam_max_sort_file_size = <%= node['mysql']['myisam_max_sort_file_size'] %>
+myisam-recover = BACKUP
+back_log = <%= node['mysql']['back_log'] %>
+query_cache_limit = <%= node['mysql']['query_cache_limit'] %>
+query_cache_size = <%= node['mysql']['query_cache_size'] %>
+log_slow_queries = <%= node['mysql']['log_slow_queries'] %>
+long_query_time = <%= node['mysql']['long_query_time'] %>
+<% if node['mysql']['long_query_no_index'] == true -%>
+log-queries-not-using-indexes
+<% end -%>
+expire_logs_days = <%= node['mysql']['expire_logs_days'] %>
+max_binlog_size = <%= node['mysql']['max_binlog_size'] %>
+innodb_buffer_pool_size = <%= node['mysql']['innodb_buffer_pool_size'] %>
+innodb_additional_mem_pool_size = <%= node['mysql']['innodb_additional_mem_pool_size'] %>
+
+[mysqldump]
+quick
+quote-names
+max_allowed_packet = <%= node['mysql']['max_allowed_packet'] %>
+
+[mysql]
+#no-auto-rehash # faster start of mysql but no tab completition
+
+[isamchk]
+key_buffer = <%= node['mysql']['max_allowed_packet'] %>
+!includedir /etc/mysql/conf.d/

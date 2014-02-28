@@ -1,0 +1,44 @@
+source $(dirname $0)/.lib/unixbox
+source $(dirname $0)/.lib/substratum
+
+# Class method
+function sheep.require {
+    ${SHEEP_DIR:-~/sheep}/sheep "$@"
+}
+
+function sheep:machine.require {
+    sheep.require blue insheeption machine "$@"
+}
+
+function sheep:machine::new {
+    self=$1; shift
+    instance_var $self name $1
+    instance_var $self ip $(substratum.get_machine_ip $1 "eth0")
+
+    # Create $self.unixbox as class unixbox.
+    #eval "USER=cloudscaling new $self.unixbox is unixbox $($self.ip)"
+
+    # Mix-in Unixbox
+    SSH_PORT=22 USER=cloudscaling new $self is unixbox $($self.ip)
+}
+
+function sheep:machine::launch {
+    self=$1; shift
+    sheep:machine.require launch --vm-name $($self.name)
+}
+
+function sheep:machine::wait {
+    sheep:machine.require wait --vm-name $($self.name)
+}
+
+function sheep:machine::update_deployments {
+    self=$1; shift
+    UUID=$1
+    substratum.cli machine update --deployments $UUID $($self.name)
+}
+
+## Wrap unixbox.
+#function sheep:machine::ssh {
+#    self=$1; shift
+#    $self.unibox.ssh "$@"
+#}

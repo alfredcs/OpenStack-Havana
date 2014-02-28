@@ -1,0 +1,12 @@
+These directories follow the rules outlined here: http://docs.opscode.com/essentials_cookbook_files.html
+
+The gist is that a file is looked for in paths similar to:
+
+files/
+   host-foo.example.com
+   ubuntu-10.04
+   ubuntu-10
+   ubuntu
+   default
+
+The first one found is sent to the client.

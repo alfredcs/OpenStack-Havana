@@ -1,0 +1,9 @@
+frontend <%= @name %>_frontend
+    bind 0.0.0.0:<%= @port%>
+    default_backend <%= @name %>_backend
+
+backend <%= @name %>_backend
+    <% if @balance %>balance <%= @balance %> <% end %>
+<% OCS.machines_by_role(@role).each do |m| %>
+    server <%= m['hostname'] %> <%= m['application_ip'] %>:<%= @backend_port %> check
+<% end %>

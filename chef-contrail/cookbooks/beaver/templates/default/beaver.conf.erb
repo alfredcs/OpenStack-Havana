@@ -1,0 +1,11 @@
+# beaver
+
+description "beaver"
+
+start on virtual-filesystems
+stop on runlevel [06]
+
+# Respawn it if the process exits
+respawn
+
+exec /usr/local/bin/beaver -c <%= node['beaver']['config_file'] %> -C <%= node['beaver']['config_dir'] %> -t <%= node['beaver']['transport'] %>

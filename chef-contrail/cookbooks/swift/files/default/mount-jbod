@@ -1,0 +1,29 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          mount-jbod
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 6
+# Short-Description: Mount all of the disks in the jbod
+# Description:       This script will mount all of the disks in the jbod
+#
+### END INIT INFO
+if [[ $1 == "stop" ]]; then
+	exit 0
+fi
+
+if [[ ! -f /etc/swift/disk.conf ]] ; then
+    exit
+fi
+source /etc/swift/disk.conf
+for DISK in $DISKS; do
+  grep $DISK /proc/mounts &> /dev/null; mounted=$?
+  if [[ $mounted -eq 0 ]]; then
+    echo "$DISK is already mounted"
+  else
+    echo "Mounting $DISK"
+    mount -L $DISK $MOUNT_DIR/$DISK -o $OPTS
+    chown -R swift:swift $MOUNT_DIR/$DISK
+  fi
+done

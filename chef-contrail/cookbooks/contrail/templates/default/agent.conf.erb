@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <agent>
+    <vhost>
+      <name><%= node['contrail']['agent']['vhost'] %></name>
+      <ip-address><%= node['contrail']['app_cidr'] %></ip-address>
+      <gateway><%= node['contrail']['agent']['gateway_ip'] %></gateway>
+    </vhost>
+    <eth-port>
+      <name><%= node['contrail']['agent']['eth_port'] %></name>
+    </eth-port>
+    <discovery-server>
+      <ip-address><%= node['contrail']['discovery']['ip'] %></ip-address>
+      <control-instances>1</control-instances>
+    </discovery-server>
+    <metadata-proxy>
+        <shared-secret>foo</shared-secret>
+    </metadata-proxy>
+  </agent>
+</config>

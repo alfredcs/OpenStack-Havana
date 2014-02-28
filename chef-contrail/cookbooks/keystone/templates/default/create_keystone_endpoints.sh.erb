@@ -1,0 +1,201 @@
+#!/bin/bash
+#
+# Initial data for Keystone using python-keystoneclient
+#
+# Tenant               User      Roles
+# ------------------------------------------------------------------
+# admin                admin     admin
+# service              glance    admin
+# service              nova      admin,ResellerAdmin
+# service              swift     admin
+#
+# additional role : Member, to be used in swift for the tenant'user'
+#
+
+protocol=<%= node['openstack_config']['services']['keystone']['endpoint']['internal']['protocol'] %>
+ip=<%= OCS.app_ip(node) %>
+port=<%= node['openstack_config']['services']['keystone']['endpoint']['internal']['admin_port'] %>
+version=<%= node['openstack_config']['services']['keystone']['endpoint']['internal']['version'] %>
+
+ADMIN_PASSWORD=<%= node['openstack_config']['services']['keystone']['user']['admin']['password'] %>
+SERVICE_PASSWORD=<%= node['openstack_config']['services']['keystone']['user']['admin']['password'] %>
+export SERVICE_TOKEN=<%= node['keystone']['admin_token'] %>
+export SERVICE_ENDPOINT="$protocol://$ip:$port/$version/"
+SERVICE_TENANT_NAME=<%= node['openstack_config']['services']['keystone']['user']['admin']['tenant'] %>
+
+REGION=<%= node['openstack_config']['services']['keystone']['region'] %>
+
+<% if node['haproxy'].attribute?('https_api_hostname') %>
+  BASE_PUBLIC_URL="https://<%= node['haproxy']['https_api_hostname'] %>"
+  BASE_ADMIN_URL="https://<%= node['haproxy']['https_api_hostname'] %>"
+  BASE_INTERNAL_URL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>"
+<% else %>
+  BASE_PUBLIC_URL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>"
+  BASE_ADMIN_URL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>"
+  BASE_INTERNAL_URL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>"
+<% end %>
+
+# test that the endpoint is up
+test_server=`curl -f -s -I ${SERVICE_ENDPOINT}`
+server_ok=$?
+if [ $server_ok -ne 0 ]; then
+    echo "Keystone server connection test failled";
+    exit 1
+fi
+
+
+function get_id () {
+    echo `$@ | awk '/ id / { print $4 }'`
+}
+
+function setup_service () {
+   name=$1
+   type=$2
+   region=$3
+   public=$4
+   private=$5
+   internal=$6
+
+   echo "Checking for existing service with type $type..."
+   EX_SERVICE=$(keystone service-list | grep -i $name | awk '{print $2}')
+   if [[ "${EX_SERVICE}X" != "X" ]]; then
+       echo "Existing service found. Cowardly refusing to create redundant service. Please delete the service for ${name} and try again."
+       return 0
+   fi
+
+   if [[ "${public}X" == "X" ]]; then
+       echo "Public endpoint not set for ${name}. Please add to metadata, and re-converge box."
+       exit 1
+   fi
+   if [[ "${private}X" == "X" ]]; then
+       echo "Admin endpoint not set for ${name}. Please add to metadata, and re-converge box."
+       exit 1
+   fi
+   if [[ "${internal}X" == "X" ]]; then
+       echo "Internal endpoint not set for ${name}. Please add to metadata, and re-converge box."
+       exit 1
+   fi
+
+
+   echo "Creating service ${name}..."
+
+   SERVICE=$(get_id \
+   keystone service-create --name=${name} \
+                        --type=${type} \
+                        --description=${name})
+   echo "Service ${name} is set with id ${SERVICE}"
+
+   region=${region}
+   if [[ -z "$DISABLE_ENDPOINTS" ]]; then
+       keystone endpoint-create --region $region --service-id $SERVICE \
+        --publicurl   "$public" \
+        --adminurl    "$private" \
+        --internalurl "$internal"
+   fi
+}
+
+publicURL="$BASE_PUBLIC_URL:5000/v2.0/"
+adminURL="$BASE_ADMIN_URL:35357/v2.0/"
+internalURL="$BASE_INTERNAL_URL:\$(admin_port)s/"
+name='Identity'
+desc="Identity Service"
+setup_service $name "identity"  $REGION $publicURL $adminURL $internalURL
+
+## general SSL proxy which redirects based on port 443 /v1.1
+publicURL="$BASE_PUBLIC_URL:8774/v2/\$(tenant_id)s"
+adminURL="$BASE_ADMIN_URL:8774/v2/\$(tenant_id)s"
+internalURL="$BASE_INTERNAL_URL:8774/v2/\$(tenant_id)s"
+name='Compute'
+desc="Compute Service"
+setup_service $name "compute"  $REGION $publicURL $adminURL $internalURL
+
+## general SSL proxy which redirects based on port 443 /services/Cloud and /services/Admin
+publicURL="$BASE_PUBLIC_URL:8773/services/Cloud"
+adminURL="$BASE_ADMIN_URL:8773/services/Admin"
+internalURL="$BASE_INTERNAL_URL:8773/services/Cloud"
+name='EC2'
+desc="EC2 Service"
+setup_service $name "ec2"  $REGION $publicURL $adminURL $internalURL
+
+publicURL="$BASE_PUBLIC_URL:<%= node['glance']['api_bind_port'] %>/v2"
+adminURL="$BASE_ADMIN_URL:<%= node['glance']['api_bind_port'] %>/v2"
+internalURL="$BASE_INTERNAL_URL:<%= node['glance']['api_bind_port'] %>/v2"
+name='Image'
+desc="Image Service"
+setup_service $name "image"  $REGION $publicURL $adminURL $internalURL
+
+<% if OCS.service_enabled?('cinder_controller') %>
+#Cinder
+publicURL="$BASE_PUBLIC_URL:<%= node['openstack_config']['cinder']['server_port'] %>/v1/\$(tenant_id)s"
+adminURL="$BASE_ADMIN_URL:<%= node['openstack_config']['cinder']['server_port'] %>/v1/\$(tenant_id)s"
+internalURL="$BASE_INTERNAL_URL:<%= node['openstack_config']['cinder']['server_port'] %>/v1/\$(tenant_id)s"
+name='Volume'
+desc="Volume Service"
+setup_service $name "volume"  $REGION $publicURL $adminURL $internalURL
+<% end %>
+
+<% if OCS.service_enabled?('heat') %>
+#Heat 
+publicURL="$BASE_PUBLIC_URL:<%= node['heat']['api_bind_port'] %>/v1/\$(tenant_id)s"
+adminURL="$BASE_ADMIN_URL:<%= node['heat']['api_bind_port'] %>/v1/\$(tenant_id)s"
+internalURL="$BASE_INTERNAL_URL:<%= node['heat']['api_bind_port'] %>/v1/\$(tenant_id)s"
+name="heat"
+desc="Heat"
+setup_service $name "orchestration" $REGION $publicURL $adminURL $internalURL
+
+#Heat Cloudformation
+publicURL="$BASE_PUBLIC_URL:<%= node['heat']['api_cfn_bind_port'] %>/v1"
+adminURL="$BASE_ADMIN_URL:<%= node['heat']['api_cfn_bind_port'] %>/v1"
+internalURL="$BASE_INTERNAL_URL:<%= node['heat']['api_cfn_bind_port'] %>/v1"
+name="heat-cfn"
+desc="Heat Cloudformation"
+setup_service $name "cloudformation" $REGION $publicURL $adminURL $internalURL
+<% end %>
+
+<% if OCS.service_enabled?('quantum') %>
+# Quantum
+publicURL="$BASE_PUBLIC_URL:<%= node['quantum']['port'] %>/network/"
+adminURL="$BASE_ADMIN_URL:<%= node['quantum']['port'] %>/network/"
+internalURL="$BASE_INTERNAL_URL:<%= node['quantum']['port'] %>/network/"
+name="quantum"
+desc="Virtual networking service"
+setup_service $name "network" $REGION $publicURL $adminURL $internalURL
+<% end %>
+
+<% if OCS.service_enabled?('ceilometer_server') %>
+# Ceilometer
+publicURL="$BASE_PUBLIC_URL:<%= node['ceilometer']['api_port'] %>/metering/v2/"
+adminURL="$BASE_ADMIN_URL:<%= node['ceilometer']['api_port'] %>/metering/v2/"
+internalURL="$BASE_INTERNAL_URL:<%= node['ceilometer']['api_port'] %>/metering/v2/"
+name="ceilometer"
+setup_service $name "metering" $REGION $publicURL $adminURL $internalURL
+<% end %>
+
+# The S3 service has trouble with haproxy, so we're doing that differently...
+<% if node['haproxy'].attribute?('https_s3_hostname') %>
+publicURL="https://<%= node['haproxy']['https_s3_hostname'] %>/v1"
+adminURL="https://<%= node['haproxy']['https_s3_hostname'] %>/v1"
+internalURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>"
+<% else %>
+publicURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>"
+adminURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>"
+internalURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>"
+<% end -%>
+name='S3'
+desc="S3 Service"
+setup_service $name "s3"  $REGION $publicURL $adminURL $internalURL
+
+<% if node['haproxy'].attribute?('https_s3_hostname') %>
+ publicURL="https://<%= node['haproxy']['https_s3_hostname'] %>/v1/AUTH_\$(tenant_id)s"
+ adminURL="https://<%= node['haproxy']['https_s3_hostname'] %>/v1/AUTH_\$(tenant_id)s"
+ internalURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>/v1/AUTH_\$(tenant_id)s"
+ name='Swift'
+ desc="Object Storage Service"
+<% else %>
+publicURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>/v1/AUTH_\$(tenant_id)s"
+adminURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>"
+internalURL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= node['swift']['proxy_server']['bind_port'] %>/v1/AUTH_\$(tenant_id)s"
+name='Swift'
+desc="Object Storage Service"
+<% end -%>
+setup_service $name "object-store"  $REGION $publicURL $adminURL $internalURL

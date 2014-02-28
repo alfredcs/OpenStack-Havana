@@ -1,0 +1,24 @@
+# This file contains the auditctl rules that are loaded
+# whenever the audit daemon is started via the initscripts.
+# The rules are simply the parameters that would be passed
+# to auditctl.
+
+# First rule - delete all
+-D
+
+# Increase the buffers to survive stress events.
+# Make this bigger for busy systems
+-b <%= node[:auditd][:buffer_size] || 320 %>
+
+# Failure mode. 2 panics, 1 printk, 0 silent.
+-f <%= node[:auditd][:panic_failure] ? 2 : 1 %>
+
+# Rules executed in order, must be one-rule-per line, cannot span lines.
+# See auditctl man page
+
+<% @rules.call.each do |rule| %>
+-a <%= rule[:lists].join(',') %> <%= rule[:syscalls] %> <%= rule[:fields] %>
+<% end %>
+
+# Must be the last rule.
+-e <%= node[:auditd][:locked] ? 2 : 1 %>

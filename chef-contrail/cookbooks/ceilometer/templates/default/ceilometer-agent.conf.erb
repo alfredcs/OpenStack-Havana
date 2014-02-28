@@ -1,0 +1,31 @@
+[DEFAULT]
+verbose = True
+
+policy_file = /etc/ceilometer/policy.json
+
+os_endpoint_type = "internalURL"
+os_auth_url = <%= @ks_admin_endpoint %>
+os_tenant_name = <%= @tenant %>
+os_password = <%= @password %>
+os_username = <%= @user %>
+
+metering_secret=<%= node['ceilometer']['metering_secret'] %>
+
+sql_connection = <%= @sql_connection %>
+
+# Host name for service catalog and topics
+host=<%= node['ceilometer']['app_ip'] %>
+rpc_zmq_host=<%= node['ceilometer']['app_ip'] %>
+
+# RabbitMQ settings
+rabbit_hosts=<%= node['nova']['rabbit']['nodes'] %>
+rabbit_userid=<%=  node['nova']['rabbit']['user'] %>
+rabbit_password=<%=  node['nova']['rabbit']['password'] %>
+rabbit_virtual_host=<%=  node['nova']['rabbit']['vhost'] %>
+
+notification_topics = notifications,glance_notifications
+rpc_backend = ceilometer.openstack.common.rpc.impl_kombu
+periodic_interval = <%= @periodic_interval %>
+
+[keystone_authtoken]
+<%= render "paste-auth.erb", :cookbook => "keystone", :variables => { :service => "ceilometer" } %>

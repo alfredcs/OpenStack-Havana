@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+# smoketest_driver checks for this and won't require substratum...
+ENV['SMOKETEST_SUBSTRATUM_NOT_NEEDED'] = 'true'
+
+require_relative 'smoketest_driver'
+
+# inspect the entire cs-chef directory
+dir_to_examine = File.expand_path(File.dirname(__FILE__) + "/..")
+
+count = `find #{dir_to_examine} -name '*.rb' | wc -l`.lstrip.chomp
+puts "checking #{count} ruby files..."
+result = run_command("find #{dir_to_examine} -name '*.rb' | xargs -t -L 1 ruby -c", {:raise_on_failure => false})
+
+if result[1] == 0
+  puts "ALL OK"
+  exit 0
+else
+  puts "ERRORS DETECTED"
+  exit 1
+end

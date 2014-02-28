@@ -1,0 +1,9 @@
+<% @sshd_options.each do |key, value| -%>
+<% if value.is_a?(Array) -%>
+<% value.each do |sub_value| -%>
+<%= key %> <%= sub_value %>
+<% end -%>
+<% else -%>
+<%= key %> <%= value %>
+<% end -%>
+<% end -%>

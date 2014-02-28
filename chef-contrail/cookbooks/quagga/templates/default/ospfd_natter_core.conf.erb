@@ -1,0 +1,42 @@
+!
+! Zebra configuration saved from vty
+!   2013/08/06 21:54:40
+!
+password 8 f6ZXOkYz3Z0Jk
+log file /var/log/quagga/ospfd.log
+service password-encryption
+!
+debug ospf nsm
+debug ospf lsa
+debug ospf event
+!
+!
+interface eth0
+!
+interface eth1
+!
+interface eth2
+ description OSPF Interface to Core
+ ip ospf hello-interval 1
+ ip ospf dead-interval 2
+!
+interface eth3
+ description OSPF Interface to Edge
+ ip ospf hello-interval 1
+ ip ospf dead-interval 2
+!
+interface lo
+!
+router ospf
+ ospf router-id <%= node['quagga']['ospfd']['natter_core_router'] %>
+ timers throttle spf 100 200 1000
+ log-adjacency-changes
+ passive-interface eth0
+ passive-interface eth1
+ network <%= node['quagga']['ospfd']['natter_core_network'] %> area <%= node['quagga']['ospfd']['natter_core_area'] %>
+ network <%= node['quagga']['ospfd']['natter_core_router'] %>/32 area <%= node['quagga']['ospfd']['natter_core_area'] %>
+ default-information originate
+!
+!
+line vty
+!

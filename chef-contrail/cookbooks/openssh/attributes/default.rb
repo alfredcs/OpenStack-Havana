@@ -1,0 +1,36 @@
+default['openssh']['ListenInterface'] = [node['management_interface'], OCS.app_iface(node)]
+default['openssh']['Port'] = '22'
+default['openssh']['Protocol'] = '2'
+default['openssh']['HostKey']=[
+    '/etc/ssh/ssh_host_rsa_key',
+    '/etc/ssh/ssh_host_dsa_key',
+    '/etc/ssh/ssh_host_ecdsa_key'
+]
+default['openssh']['UsePrivilegeSeparation'] = 'yes'
+default['openssh']['KeyRegenerationInterval'] = '3600'
+default['openssh']['ServerKeyBits'] = '768'
+default['openssh']['SyslogFacility'] = 'AUTH'
+default['openssh']['LogLevel'] = 'INFO'
+default['openssh']['LoginGraceTime'] = '120'
+default['openssh']['PermitRootLogin'] = 'without-password'
+default['openssh']['StrictModes'] = 'yes'
+default['openssh']['RSAAuthentication'] = 'yes'
+default['openssh']['PubkeyAuthentication'] = 'yes'
+default['openssh']['IgnoreRhosts'] = 'yes'
+default['openssh']['RhostsRSAAuthentication'] = 'no'
+default['openssh']['HostbasedAuthentication'] = 'no'
+default['openssh']['PermitEmptyPasswords'] = 'no'
+default['openssh']['ChallengeResponseAuthentication'] = 'no'
+default['openssh']['X11Forwarding'] = 'yes'
+default['openssh']['X11DisplayOffset'] = '10'
+default['openssh']['PrintMotd'] = 'yes'
+default['openssh']['PrintLastLog'] = 'yes'
+default['openssh']['TCPKeepAlive'] = 'yes'
+default['openssh']['AcceptEnv'] = 'LANG LC_*'
+default['openssh']['Subsystem'] = 'sftp /usr/lib/openssh/sftp-server'
+default['openssh']['UsePAM'] = 'yes'
+default['openssh']['UseDNS'] = 'no'
+default['openssh']['AllowAgentForwarding'] = 'yes'
+default['openssh']['PasswordAuthentication'] = 'no'
+
+default['openssh']['AuthorizedKeysFile'] = '%h/.ssh/authorized_keys'

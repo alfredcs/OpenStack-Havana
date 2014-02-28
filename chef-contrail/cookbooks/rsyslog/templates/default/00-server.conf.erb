@@ -1,0 +1,80 @@
+#Modules
+$ModLoad imudp
+$PreserveFQDN on
+
+#Templates
+$template PerHostAuth,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/auth.log"
+$template PerHostCron,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/cron.log"
+$template PerHostSyslog,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/syslog"
+$template PerHostDaemon,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/daemon.log"
+$template PerHostKern,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/kern.log"
+$template PerHostLpr,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/lpr.log"
+$template PerHostUser,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/user.log"
+$template PerHostMail,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/mail.log"
+$template PerHostMailInfo,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/mail.info"
+$template PerHostMailWarn,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/mail.warn"
+$template PerHostMailErr,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/mail.err"
+$template PerHostNewsCrit,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/news.crit"
+$template PerHostNewsErr,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/news.err"
+$template PerHostNewsNotice,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/news.notice"
+$template PerHostDebug,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/debug"
+$template PerHostMessages,"<%= node['rsyslog']['log_dir'] %>/%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%/messages"
+# Local Logging
+$RuleSet local
+auth,authpriv.*			/var/log/auth.log
+*.*;auth,authpriv.none		-/var/log/syslog
+#cron.*				/var/log/cron.log
+daemon.*			-/var/log/daemon.log
+kern.*				-/var/log/kern.log
+lpr.*				-/var/log/lpr.log
+mail.*				-/var/log/mail.log
+user.*				-/var/log/user.log
+mail.info			-/var/log/mail.info
+mail.warn			-/var/log/mail.warn
+mail.err			/var/log/mail.err
+news.err			/var/log/news/news.err
+news.notice			-/var/log/news/news.notice
+*.=debug;\
+	auth,authpriv.none;\
+	news.none;mail.none	-/var/log/debug
+*.=info;*.=notice;*.=warn;\
+	auth,authpriv.none;\
+	cron,daemon.none;\
+	mail,news.none		-/var/log/messages
+*.emerg				*
+daemon.*;mail.*;\
+	news.err;\
+	*.=debug;*.=info;\
+	*.=notice;*.=warn	|/dev/xconsole
+
+
+#Send to rsyslog host via UDP
+<% node['rsyslog']['log_hosts'].each do |server| -%>
+*.* @<%= server %>:514
+<% end -%>
+
+# use the local RuleSet as default if not specified otherwise
+$DefaultRuleset local
+
+$RuleSet remote
+auth,authpriv.*         ?PerHostAuth
+*.*;auth,authpriv.none  -?PerHostSyslog
+cron.*                  ?PerHostCron
+daemon.*                -?PerHostDaemon
+kern.*                  -?PerHostKern
+lpr.*                   -?PerHostLpr
+mail.*                  -?PerHostMail
+user.*                  -?PerHostUser
+
+mail.info               -?PerHostMailInfo
+mail.warn               ?PerHostMailWarn
+mail.err                ?PerHostMailErr
+
+news.crit               ?PerHostNewsCrit
+news.err                ?PerHostNewsErr
+news.notice             -?PerHostNewsNotice
+
+### Listeners
+$InputUDPServerBindRuleset remote
+$UDPServerAddress <%= OCS.app_ip(node) %>
+$UDPServerRun 514

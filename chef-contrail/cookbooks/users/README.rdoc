@@ -1,0 +1,26 @@
+= DESCRIPTION:
+A user management cookbook which:
+1) Provides library methods for the convenience of other cookbooks
+2) Manages login.defs, /etc/defaults/useradd, and adduser.conf
+3) Supports optional chef-based user creation and deletion,
+   with ssh key management (and an optional revocation list)
+4) Is useful even without the user creation/deletion portions. ;-)
+
+This cookbook provides useful utility methods currently used by tcpspy and auditd.
+
+= REQUIREMENTS:
+
+* openssh
+
+= ATTRIBUTES: 
+
+MANY. Look at the attributes/defaults.rb file.
+
+= USAGE:
+
+1. Configure login.defs, useradd, adduser.conf attributes as needed (see attributes/defaults.rb)
+2. Optionally set the range of uids to use for managed users via attributes.
+   (this is non-overlapping with the standard MIN_UID and MAX_UID)
+2. Optionally list managed users in users[:table]
+3. Optionally provide an SSH key revocation list via HTTP. This is only applied to managed users.
+ 

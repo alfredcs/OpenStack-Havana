@@ -1,0 +1,4 @@
+AuthUserFile <%= node[:collectd][:collectd_web][:path] %>/.htpasswd
+AuthName "Login Required"
+AuthType Basic
+require valid-user

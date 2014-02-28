@@ -1,0 +1,4 @@
+#!/bin/bash -e
+bash create_ec2_creds
+bash novainit
+bash testinstance

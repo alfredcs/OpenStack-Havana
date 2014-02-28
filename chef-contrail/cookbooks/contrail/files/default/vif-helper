@@ -1,0 +1,28 @@
+#!/bin/bash
+op=$1
+case $op in
+    create)
+        iface=$2
+        mac=$3
+        vif --create ${iface} --mac ${mac} &> /dev/null
+    ;;
+    add)
+        iface=$2
+        mac=$3
+        if_type=$4
+        vif --add ${iface} --mac ${mac} --vrf 0 --mode x --type ${if_type} &> /dev/null
+    ;;
+    delete)
+        iface=$2
+        id=$(vif --list | grep ${iface} | awk '{print $1}' | cut -d '/' -f2)
+        vif --delete $id &> /dev/null
+    ;;
+    *)
+        echo "USAGE: vif-helper <command> <args>"
+        echo "create <iface> <mac>"
+        echo "add <iface> <mac> <type>"
+        echo "delete <iface>"
+        exit 1
+    ;;
+esac
+exit 0

@@ -1,0 +1,8 @@
+[beaver]
+rabbitmq_host: <%= node['quagga']['ospfd']['app_ecmp_ip'] %>
+rabbitmq_username: <%= node['logstash']['rabbitmq_user'] %>
+rabbitmq_password: <%= node['logstash']['rabbitmq_pass'] %>
+rabbitmq_vhost: <%= node['logstash']['rabbitmq_vhost'] %>
+respawn_delay: <%= node['beaver']['respawn_delay'] %>
+max_failures: <%= node['beaver']['max_failure'] %>
+fqdn: <%= node['beaver']['fqdn'] %>

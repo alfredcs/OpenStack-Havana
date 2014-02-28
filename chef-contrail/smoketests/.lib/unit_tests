@@ -1,0 +1,44 @@
+#
+# bash-based testing framework.
+#
+
+# Count tests and failed assertions.
+tests=0
+assertions=0
+function assert {
+    ((tests++))
+    if ! ($@); then
+        echo -e "$1\tFAIL"
+        ((assertions++))
+        return 1
+    fi
+    echo -e "$1\tPASS"
+    return 0
+}
+
+# Run the tests (on exit)
+function do_exit {
+    if [ $? -ne 0 ]; then
+        echo "Critical FAILURE. Exiting."
+        exit -1
+    fi
+
+    echo "-------------------------------------------"
+    echo "Running tests for $0"
+    echo "-------------------------------------------"
+    for f in $(declare -F | sed -n 's/declare -f //; /^test_/p'); do
+        set +e
+        assert $f
+        set -e
+    done
+
+    echo "-------------------------------------------"
+    echo "All tests complete."
+    echo "Passed $(($tests-$assertions))/${tests} tests."
+    echo -n "Test suite "
+    [ $assertions -gt 0 ] && echo failed || echo passed
+    echo "-------------------------------------------"
+    exit $assertions
+}
+
+trap 'do_exit' EXIT

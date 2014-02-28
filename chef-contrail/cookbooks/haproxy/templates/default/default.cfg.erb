@@ -1,0 +1,36 @@
+global
+    log /dev/log    local1
+    chroot <%= node['haproxy']['chroot_dir'] %>
+    user <%= node['haproxy']['user'] %>
+    group <%= node['haproxy']['group'] %>
+    daemon
+
+defaults
+    log global
+    mode    http
+    option  httplog
+    option  dontlognull
+    option  redispatch
+    option  tcpka
+    maxconn 2000
+    retries 3
+    timeout connect <%= node['haproxy']['con_timeout'] %>
+    timeout client <%= node['haproxy']['cli_timeout'] %>
+    timeout server <%= node['haproxy']['cli_timeout'] %>
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
+
+listen stats :1936
+    mode http
+    stats enable
+    stats hide-version
+    stats scope .
+    stats realm Haproxy\ Statistics
+    stats uri /
+    stats auth user:pass
+

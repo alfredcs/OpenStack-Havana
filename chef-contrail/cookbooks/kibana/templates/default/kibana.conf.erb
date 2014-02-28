@@ -1,0 +1,15 @@
+Listen <%= node['kibana']['bind_host'] %>:<%= node['kibana']['bind_port'] %>
+<VirtualHost <%= node['kibana']['bind_host'] %>:<%= node['kibana']['bind_port'] %>>
+  ServerName kibana
+
+  DocumentRoot <%= node['kibana']['web_dir'] %>
+  <Directory <%= node['kibana']['web_dir'] %>>
+    Allow from all
+    Options -Multiviews
+  </Directory>
+ 
+  LogLevel debug
+  ErrorLog <%= node['kibana']['log_dir'] %>error_log
+  CustomLog <%= node['kibana']['log_dir'] %>access_log combined
+ 
+</VirtualHost>

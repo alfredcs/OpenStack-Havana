@@ -1,0 +1,10 @@
+#!/bin/sh
+iface=$(echo $0 | cut -d'-' -f2)
+ip link show up | grep -q $iface
+if [ "$?" -eq "0" ]; then
+  echo "$iface UP" > /dev/stderr
+  exit 0
+else
+  echo "$iface DOWN" > /dev/stderr
+  exit 1
+fi

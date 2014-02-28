@@ -1,0 +1,7 @@
+set logfile <%= node['monit']['log_file'] %>
+set daemon <%= node['monit']['polling_interval'] %>
+set httpd port <%= node['monit']['httpd_port'] %>
+    address <%= OCS.app_ip(node) %>
+    allow 0.0.0.0/0.0.0.0
+    allow <%= node['monit']['username'] %>:<%= node['monit']['password'] %>
+include /etc/monit/conf.d/*.conf

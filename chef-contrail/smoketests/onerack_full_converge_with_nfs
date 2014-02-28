@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require_relative 'smoketest_driver'
+
+puts "*** TESTING: One Rack - full morph with NFS"
+
+## DO A SBM CS-CHEF BUILD OR USE NFS...
+# using NFS for now
+
+# imaging is already done...
+
+## launch machines
+# TODO: replace this with a launch_environment that can
+#   query substratum and find environment type (i.e. the start order to use)
+## launch machines
+# # z6 needs z7/identity before it can finalize it's morph...
+run_command("#{SHEEP_DIR}/sheep blue insheeption machine launch --vm-name z2")
+machine_completely_morphed?('z2')
+run_command("#{SHEEP_DIR}/sheep blue insheeption machine launch --vm-name z3")
+machine_completely_morphed?('z3')
+
+# the rest...
+run_command("parallel -u '#{SHEEP_DIR}/sheep blue insheeption machine launch --vm-name' ::: z4 c5 c6 c7 c8 c9")
+
+# TODO: replace with environment_fully_morphed function call...
+machine_completely_morphed?('z4')
+machine_completely_morphed?('c5')
+machine_completely_morphed?('c6')
+machine_completely_morphed?('c7')
+machine_completely_morphed?('c8')
+machine_completely_morphed?('c9')
+
+# print for proof
+run_command("substratum machine list")
+
+puts "*** TESTING_SUCCES: One Rack - full morph with NFS"

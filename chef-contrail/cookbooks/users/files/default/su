@@ -1,0 +1,21 @@
+# This allows root to su without passwords (normal operation)
+auth       sufficient pam_rootok.so
+
+# Require wheel group.
+auth       required   pam_wheel.so
+
+# parsing /etc/environment needs "readenv=1"
+session       required   pam_env.so readenv=1
+
+# locale variables are also kept into /etc/default/locale in etch
+# reading this file *in addition to /etc/environment* does not hurt
+session       required   pam_env.so readenv=1 envfile=/etc/default/locale
+
+session    optional   pam_mail.so nopen
+
+# The standard Unix authentication modules, used with
+# NIS (man nsswitch) as well as normal /etc/passwd and
+# /etc/shadow entries.
+@include common-auth
+@include common-account
+@include common-session

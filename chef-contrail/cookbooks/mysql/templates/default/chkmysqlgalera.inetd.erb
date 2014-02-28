@@ -1,0 +1,16 @@
+# default: on
+# description: chkmysqlgalera
+service chkmysqlgalera
+{
+        flags           = REUSE
+        socket_type     = stream
+        port            = <%= node['mysql']['check_port'] %>
+        wait            = no
+        user            = nobody
+        server          = /usr/share/mysql/chkmysqlgalera
+        log_on_failure  += USERID
+        disable         = no
+        bind            = <%= node['mysql']['bind_address'] %>
+        only_from       = 0.0.0.0/0
+        per_source      = UNLIMITED 
+}

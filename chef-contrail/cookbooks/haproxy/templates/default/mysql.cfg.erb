@@ -1,0 +1,15 @@
+listen <%= @name %>
+    bind <%= @address %>:<%= @port %>
+    mode tcp
+    log global
+    option tcplog
+    option tcpka
+    balance leastconn
+    
+<% OCS.machines_by_role('mysql').each_with_index do |m, idx| %>
+  <% if idx == 0 %>
+    server <%= m['hostname'] %> <%= m['application_ip'] %>:<%= @port %> check port <%= node['mysql']['check_port'] %>
+  <% else %>
+    server <%= m['hostname'] %> <%= m['application_ip'] %>:<%= @port %> check port <%= node['mysql']['check_port'] %> backup
+  <% end %>
+<% end %>

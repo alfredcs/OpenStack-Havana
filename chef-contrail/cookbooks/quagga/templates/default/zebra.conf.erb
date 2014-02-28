@@ -1,0 +1,32 @@
+! -*- zebra -*-
+!
+hostname DSEndpoint1
+password 8 <%= node['quagga']['password'] %>
+service password-encryption
+!
+
+interface <%= node['quagga']['ospfd']['app_ecmp_interface'] %>
+  description private ospf interface
+  ip address <%= node['quagga']['ospfd']['router_id'] %><%= node['quagga']['ospfd']['block_app_cidr'].netmask %>
+<% node['haproxy']['addresses'].each_with_index do |(ip, desc), idx|%>
+interface lo:<%= idx+2%>
+  description <%= desc %>
+  ip address <%= ip %>
+<% end %>
+
+<% b0_mgmt_gw = OCS.mgmt_cidr(0, node)[1].ip %>
+<% OCS.blocks.select { |b| b['number'] != 0 }.each do |b| %>
+ip route <%= OCS.mgmt_cidr(b['number'], node).to_s %> <%= b0_mgmt_gw %>
+<% end %>
+
+ip route <%= OCS.isl_cidr.to_s %> <%= b0_mgmt_gw %>
+
+ip prefix-list deny_isl seq 5 deny <%= OCS.isl_cidr.to_s %> le 32
+ip prefix-list deny_isl seq 10 permit 0.0.0.0/0 le 32
+
+route-map rm_deny_isl permit 10
+  match ip address prefix-list deny_isl
+
+ip protocol ospf route-map rm_deny_isl
+
+log file /var/log/quagga/zebra.log

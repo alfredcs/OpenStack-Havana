@@ -1,0 +1,49 @@
+#!/bin/bash -ex
+MAXFAIL=10
+source novarc
+#wait for compute node to come online
+nova-manage service list
+FAIL=0
+while [ `nova-manage service list | grep "nova-compute" | grep ":-)" | wc -l` -eq 0 ]; do
+	echo "Waiting 30 seconds for compute node to come online: $FAIL/$MAXFAIL"
+	sleep 5
+	let FAIL++
+	if [ $FAIL -gt $MAXFAIL ]; then
+		echo "No compute nodes online after 3000 seconds"
+		exit 1
+	fi
+done
+AMI_ID=`euca-describe-images | grep ami | head -1 | awk '{print $2}'`
+euca-describe-instances
+FAIL=0
+INSTANCEID=`euca-run-instances -t m1.small $AMI_ID -k test | grep INSTANCE | awk '{ print $2 }'`
+if [ -z $INSTANCEID ]; then
+  echo "VM failed to launch."
+  exit 1
+fi
+while [ `euca-describe-instances $INSTANCEID | grep "running" | wc -l` -lt 1 ]; do
+  echo "Instance $INSTANCEID launched.  Waiting for status running failure $FAIL/$MAXFAIL."
+  euca-describe-instances
+  let FAIL++
+  sleep 6
+  if [ $FAIL -gt $MAXFAIL ]; then
+    echo "VM failed to go to running state after 50 seconds"
+    exit 1
+  fi
+
+done
+
+echo "Instance $INSTANCEID running"
+
+FAIL=0
+IP=`euca-describe-instances $INSTANCEID | grep INSTANCE | awk '{ print $16 }'`
+while [ `ssh -o StrictHostKeyChecking=no -i test.pem cirros@$IP "uname -a" | grep "cirros" | wc -l` -eq 0 ]; do
+  let FAIL++
+  echo "Instance $INSTANCEID at IP $IP isn't online yet $FAIL/$MAXFAIL"
+  sleep 6
+  if [ $FAIL -gt $MAXFAIL ]; then
+    echo "VM unreachable on the network."
+    exit 1
+  fi
+done
+echo "Nova VM test passed."

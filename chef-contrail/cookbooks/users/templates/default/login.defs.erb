@@ -1,0 +1,364 @@
+#
+# /etc/login.defs - Configuration control definitions for the login package.
+#
+# Three items must be defined:  MAIL_DIR, ENV_SUPATH, and ENV_PATH.
+# If unspecified, some arbitrary (and possibly incorrect) value will
+# be assumed.  All other items are optional - if not specified then
+# the described action or option will be inhibited.
+#
+# Comment lines (lines beginning with "#") and blank lines are ignored.
+#
+# Modified for Linux.  --marekm
+
+# REQUIRED for useradd/userdel/usermod
+#   Directory where mailboxes reside, _or_ name of file, relative to the
+#   home directory.  If you _do_ define MAIL_DIR and MAIL_FILE,
+#   MAIL_DIR takes precedence.
+#
+#   Essentially:
+#      - MAIL_DIR defines the location of users mail spool files
+#        (for mbox use) by appending the username to MAIL_DIR as defined
+#        below.
+#      - MAIL_FILE defines the location of the users mail spool files as the
+#        fully-qualified filename obtained by prepending the user home
+#        directory before $MAIL_FILE
+#
+# NOTE: This is no more used for setting up users MAIL environment variable
+#       which is, starting from shadow 4.0.12-1 in Debian, entirely the
+#       job of the pam_mail PAM modules
+#       See default PAM configuration files provided for
+#       login, su, etc.
+#
+# This is a temporary situation: setting these variables will soon
+# move to /etc/default/useradd and the variables will then be
+# no more supported
+MAIL_DIR        <%= node['users']['mail_dir'] %>
+
+#
+# Enable logging and display of /var/log/faillog login failure info.
+# This option conflicts with the pam_tally PAM module.
+#
+FAILLOG_ENAB		<%= node['users']['faillog_enab'] %>
+
+#
+# Enable display of unknown usernames when login failures are recorded.
+#
+# WARNING: Unknown usernames may become world readable.
+# See #290803 and #298773 for details about how this could become a security
+# concern
+LOG_UNKFAIL_ENAB	<%= node['users']['log_unkfail_enab'] %>
+
+#
+# Enable logging of successful logins
+#
+LOG_OK_LOGINS		<%= node['users']['log_ok_logins'] %>
+
+#
+# Enable "syslog" logging of su activity - in addition to sulog file logging.
+# SYSLOG_SG_ENAB does the same for newgrp and sg.
+#
+SYSLOG_SU_ENAB		<%= node['users']['syslog_su_enab'] %>
+SYSLOG_SG_ENAB		<%= node['users']['syslog_sg_enab'] %>
+
+#
+# If defined, all su activity is logged to this file.
+#
+<% if defined? node['users']['sulog_file'] %>
+SULOG_FILE	<%= node['users']['sulog_file'] %>
+<% end %>
+
+#
+# If defined, file which maps tty line to TERM environment parameter.
+# Each line of the file is in a format something like "vt100  tty01".
+#
+<% if defined? node['users']['ttytype_file'] %>
+TTYTYPE_FILE	<%= node['users']['ttytype_file'] %>
+<% end %>
+
+#
+# If defined, login failures will be logged here in a utmp format
+# last, when invoked as lastb, will read /var/log/btmp, so...
+#
+<% if defined? node['users']['ftmp_file'] %>
+FTMP_FILE	<%= node['users']['ftmp_file'] %>
+<% end %>
+
+#
+# If defined, the command name to display when running "su -".  For
+# example, if this is defined as "su" then a "ps" will display the
+# command is "-su".  If not defined, then "ps" would display the
+# name of the shell actually being run, e.g. something like "-sh".
+#
+<% if defined? node['users']['su_name'] %>
+SU_NAME		<%= node['users']['su_name'] %>
+<% end %>
+
+#
+# If defined, file which inhibits all the usual chatter during the login
+# sequence.  If a full pathname, then hushed mode will be enabled if the
+# user's name or shell are found in the file.  If not a full pathname, then
+# hushed mode will be enabled if the file exists in the user's home directory.
+#
+<% if defined? node['users']['hushlogin_file'] %>
+HUSHLOGIN_FILE	<%= node['users']['hushlogin_file'] %>
+<% end %>
+
+#
+# *REQUIRED*  The default PATH settings, for superuser and normal users.
+#
+# (they are minimal, add the rest in the shell startup files)
+ENV_SUPATH	<%= node['users']['env_supath'] %>
+ENV_PATH	<%= node['users']['env_path'] %>
+
+#
+# Terminal permissions
+#
+#	TTYGROUP	Login tty will be assigned this group ownership.
+#	TTYPERM		Login tty will be set to this permission.
+#
+# If you have a "write" program which is "setgid" to a special group
+# which owns the terminals, define TTYGROUP to the group number and
+# TTYPERM to 0620.  Otherwise leave TTYGROUP commented out and assign
+# TTYPERM to either 622 or 600.
+#
+# In Debian /usr/bin/bsd-write or similar programs are setgid tty
+# However, the default and recommended value for TTYPERM is still 0600
+# to not allow anyone to write to anyone else console or terminal
+
+# Users can still allow other people to write them by issuing
+# the "mesg y" command.
+
+TTYGROUP	<%= node['users']['ttygroup'] %>
+TTYPERM		<%= node['users']['ttyperm'] %>
+
+#
+# Login configuration initializations:
+#
+#	ERASECHAR	Terminal ERASE character ('\010' = backspace).
+#	KILLCHAR	Terminal KILL character ('\025' = CTRL/U).
+#	UMASK		Default "umask" value.
+#
+# The ERASECHAR and KILLCHAR are used only on System V machines.
+#
+# UMASK is the default umask value for pam_umask and is used by
+# useradd and newusers to set the mode of the new home directories.
+# 022 is the "historical" value in Debian for UMASK
+# 027, or even 077, could be considered better for privacy
+# There is no One True Answer here : each sysadmin must make up his/her
+# mind.
+#
+# Prefix these values with "0" to get octal, "0x" to get hexadecimal.
+#
+ERASECHAR	<%= node['users']['erasechar'] %>
+KILLCHAR	<%= node['users']['killchar'] %>
+UMASK		<%= node['users']['umask'] %>
+
+#
+# Password aging controls:
+#
+#	PASS_MAX_DAYS	Maximum number of days a password may be used.
+#	PASS_MIN_DAYS	Minimum number of days allowed between password changes.
+#	PASS_WARN_AGE	Number of days warning given before a password expires.
+#
+PASS_MAX_DAYS	<%= node['users']['pass_max_days'] %>
+PASS_MIN_DAYS	<%= node['users']['pass_min_days'] %>
+PASS_WARN_AGE	<%= node['users']['pass_warn_age'] %>
+
+#
+# Min/max values for automatic uid selection in useradd
+#
+UID_MIN			 <%= node['users']['first_uid'] %>
+UID_MAX			<%= node['users']['last_uid'] %>
+
+# System accounts
+SYS_UID_MIN		  <%= node['users']['first_system_uid'] %>
+SYS_UID_MAX		  <%= node['users']['last_system_uid'] %>
+
+#
+# Min/max values for automatic gid selection in groupadd
+#
+GID_MIN			 <%= node['users']['first_gid'] %>
+GID_MAX			<%= node['users']['last_gid'] %>
+# System accounts
+SYS_GID_MIN		  <%= node['users']['first_system_gid'] %>
+SYS_GID_MAX		  <%= node['users']['last_system_gid'] %>
+
+#
+# Max number of login retries if password is bad. This will most likely be
+# overriden by PAM, since the default pam_unix module has it's own built
+# in of 3 retries. However, this is a safe fallback in case you are using
+# an authentication module that does not enforce PAM_MAXTRIES.
+#
+LOGIN_RETRIES		<%= node['users']['login_retries'] %>
+
+#
+# Max time in seconds for login
+#
+LOGIN_TIMEOUT		<%= node['users']['login_timeout'] %>
+
+#
+# Which fields may be changed by regular users using chfn - use
+# any combination of letters "frwh" (full name, room number, work
+# phone, home phone).  If not defined, no changes are allowed.
+# For backward compatibility, "yes" = "rwh" and "no" = "frwh".
+#
+CHFN_RESTRICT		<%= node['users']['chfn_restrict'] %>
+
+#
+# Should login be allowed if we can't cd to the home directory?
+# Default in no.
+#
+DEFAULT_HOME	<%= node['users']['default_home'] %>
+
+#
+# If defined, this command is run when removing a user.
+# It should remove any at/cron/print jobs etc. owned by
+# the user to be removed (passed as the first argument).
+#
+<% if defined? node['users']['userdel_cmd'] %>
+USERDEL_CMD	<%= node['users']['userdel_cmd'] %>
+<% end %>
+
+#
+# If set to yes, userdel will remove the users group if it contains no
+# more members, and useradd will create by default a group with the name
+# of the user.
+#
+# Other former uses of this variable such as setting the umask when
+# user==primary group are not used in PAM environments, such as Debian
+#
+USERGROUPS_ENAB <%= node['users']['usergroups_enab'] %>
+
+#
+# Instead of the real user shell, the program specified by this parameter
+# will be launched, although its visible name (argv[0]) will be the shell's.
+# The program may do whatever it wants (logging, additional authentification,
+# banner, ...) before running the actual shell.
+#
+<% if defined? node['users']['fakeshell'] %>
+FAKE_SHELL <%= node['users']['fakeshell'] %>
+<% end %>
+
+#
+# If defined, either full pathname of a file containing device names or
+# a ":" delimited list of device names.  Root logins will be allowed only
+# upon these devices.
+#
+# This variable is used by login and su.
+#
+#CONSOLE	/etc/consoles
+#CONSOLE	console:tty01:tty02:tty03:tty04
+<% if defined? node['users']['console'] %>
+CONSOLE <%= node['users']['console'] %>
+<% end %>
+
+#
+# List of groups to add to the user's supplementary group set
+# when logging in on the console (as determined by the CONSOLE
+# setting).  Default is none.
+#
+# Use with caution - it is possible for users to gain permanent
+# access to these groups, even when not logged in on the console.
+# How to do it is left as an exercise for the reader...
+#
+# This variable is used by login and su.
+#
+#CONSOLE_GROUPS		floppy:audio:cdrom
+<% if defined? node['users']['console_groups'] %>
+CONSOLE_GROUPS		<%= node['users']['console_groups'] %>
+<% end %>
+#
+# If set to "yes", new passwords will be encrypted using the MD5-based
+# algorithm compatible with the one used by recent releases of FreeBSD.
+# It supports passwords of unlimited length and longer salt strings.
+# Set to "no" if you need to copy encrypted passwords to other systems
+# which don't understand the new algorithm.  Default is "no".
+#
+# This variable is deprecated. You should use ENCRYPT_METHOD.
+#
+#MD5_CRYPT_ENAB	no
+<% if defined? node['users']['md5_crypt_enab'] %>
+MD5_CRYPT_ENAB <%= node['users']['md5_crypt_enab'] %>
+<% end %>
+
+#
+# If set to MD5 , MD5-based algorithm will be used for encrypting password
+# If set to SHA256, SHA256-based algorithm will be used for encrypting password
+# If set to SHA512, SHA512-based algorithm will be used for encrypting password
+# If set to DES, DES-based algorithm will be used for encrypting password (default)
+# Overrides the MD5_CRYPT_ENAB option
+#
+# Note: It is recommended to use a value consistent with
+# the PAM modules configuration.
+#
+<% if defined? node['users']['encrypt_method'] %>
+ENCRYPT_METHOD <%= node['users']['encrypt_method'] %>
+<% end %>
+
+#
+# Only used if ENCRYPT_METHOD is set to SHA256 or SHA512.
+#
+# Define the number of SHA rounds.
+# With a lot of rounds, it is more difficult to brute forcing the password.
+# But note also that it more CPU resources will be needed to authenticate
+# users.
+#
+# If not specified, the libc will choose the default number of rounds (5000).
+# The values must be inside the 1000-999999999 range.
+# If only one of the MIN or MAX values is set, then this value will be used.
+# If MIN > MAX, the highest value will be used.
+#
+# SHA_CRYPT_MIN_ROUNDS 5000
+# SHA_CRYPT_MAX_ROUNDS 5000
+<% if defined? node['users']['sha_crypt_min_rounds'] %>
+SHA_CRYPT_MIN_ROUNDS <%= node['users']['sha_crypt_min_rounds'] %>
+<% end %>
+<% if defined? node['users']['sha_crypt_max_rounds'] %>
+SHA_CRYPT_MAX_ROUNDS <%= node['users']['sha_crypt_max_rounds'] %>
+<% end %>
+
+################# OBSOLETED BY PAM ##############
+#						#
+# These options are now handled by PAM. Please	#
+# edit the appropriate file in /etc/pam.d/ to	#
+# enable the equivelants of them.
+#
+###############
+
+#MOTD_FILE
+#DIALUPS_CHECK_ENAB
+#LASTLOG_ENAB
+#MAIL_CHECK_ENAB
+#OBSCURE_CHECKS_ENAB
+#PORTTIME_CHECKS_ENAB
+#SU_WHEEL_ONLY
+#CRACKLIB_DICTPATH
+#PASS_CHANGE_TRIES
+#PASS_ALWAYS_WARN
+#ENVIRON_FILE
+#NOLOGINS_FILE
+#ISSUE_FILE
+#PASS_MIN_LEN
+#PASS_MAX_LEN
+#ULIMIT
+#ENV_HZ
+#CHFN_AUTH
+#CHSH_AUTH
+#FAIL_DELAY
+
+################# OBSOLETED #######################
+#						  #
+# These options are no more handled by shadow.    #
+#                                                 #
+# Shadow utilities will display a warning if they #
+# still appear.                                   #
+#                                                 #
+###################################################
+
+# CLOSE_SESSIONS
+# LOGIN_STRING
+# NO_PASSWORD_CONSOLE
+# QMAIL_DIR
+
+
+

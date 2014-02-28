@@ -1,0 +1,23 @@
+address = <%= OCS.app_ip(node) %>
+
+[etc_swift]
+uid = <%= node['swift']['user'] %>
+gid = <%= node['swift']['group'] %>
+log file = /var/log/rsyncd.log
+pid file = /var/run/rsyncd.pid
+max connections = 25
+path = /etc/swift
+read only = false
+lock file = /var/lock/etc_swift.lock
+
+<% @servers.each do |server,path| %>
+[<%= server %>]
+uid = <%= node['swift']['user'] %>
+gid = <%= node['swift']['group'] %>
+max connections = 25
+path = /srv/node/
+read only = false
+lock file = /var/lock/<%= server %>.lock
+
+<% end %>
+

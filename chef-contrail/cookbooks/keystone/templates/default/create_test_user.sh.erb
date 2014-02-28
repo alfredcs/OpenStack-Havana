@@ -1,0 +1,47 @@
+#!/bin/bash
+
+export ADMIN_PASSWORD=<%= @service['user']['admin']['password'] %>
+export SERVICE_PASSWORD=<%= @service['user']['admin']['password'] %>
+export SERVICE_TOKEN=<%= node['keystone']['admin_token'] %>
+export SERVICE_ENDPOINT="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= @service['endpoint']['internal']['admin_port'] %>/v2.0/"
+export SERVICE_TENANT_NAME=<%= @service['user']['admin']['tenant'] %>
+
+# test that the endpoint is up
+test_server=`curl -f -s -I ${SERVICE_ENDPOINT}`
+server_ok = $?
+if [ $server_ok -ne 0 ]; then
+    echo "Keystone server connection test failled";
+    exit 1
+fi
+
+keystone tenant-delete test
+keystone tenant-create --name test
+keystone user-delete test
+keystone user-create --name test --pass "testing" --email tester@cloudscaling.com --enabled true
+keystone role-delete test
+keystone role-create --name test
+
+keystone user-role-list --tenant test --user test | grep test && keystone user-role-remove --user test --role test --tenant test
+keystone user-role-add --user test --role test --tenant test
+keystone user-role-list --tenant test --user admin | grep test && keystone user-role-remove --user admin --role test --tenant test
+keystone user-role-add --user admin --role test --tenant test
+
+unset ADMIN_PASSWORD
+unset SERVICE_PASSWORD
+unset SERVICE_TOKEN
+unset SERVICE_ENDPOINT
+unset SERVICE_TENANT_NAME
+
+export OS_TENANT_NAME=test
+export OS_USERNAME=test
+export OS_AUTH_URL="http://<%= node['quagga']['ospfd']['app_ecmp_ip'] %>:<%= @service['endpoint']['internal']['port'] %>/v2.0/"
+export OS_PASSWORD=testing
+
+export EC2_URL=$(keystone catalog --service ec2 | awk '/ publicURL / { print $4 }')
+export S3_URL=$(keystone catalog --service s3 | awk '/ publicURL / { print $4 }')
+CREDS=$(keystone ec2-credentials-create)
+export EC2_ACCESS_KEY=$(echo "$CREDS" | awk '/ access / { print $4 }')
+export EC2_SECRET_KEY=$(echo "$CREDS" | awk '/ secret / { print $4 }')
+
+echo -e "export EC2_URL=$EC2_URL\nexport S3_URL=$S3_URL\nexport EC2_ACCESS_KEY=$EC2_ACCESS_KEY\nexport EC2_SECRET_KEY=$EC2_SECRET_KEY\n" > /root/test_user_eucarc
+

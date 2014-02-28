@@ -1,0 +1,7 @@
+default['nginx']['proxy_redirect'] = "off"
+default['nginx']['client_max_body_size'] = "10m"
+default['nginx']['client_body_buffer_size'] = "128k"
+default['nginx']['proxy_connect_timeout'] = "90"
+default['nginx']['proxy_send_timeout'] = "90"
+default['nginx']['proxy_read_timeout'] = "90"
+default['nginx']['proxy_buffers'] = "32 4k"

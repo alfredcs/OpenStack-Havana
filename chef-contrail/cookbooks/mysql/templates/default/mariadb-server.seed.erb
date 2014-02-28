@@ -1,0 +1,17 @@
+mariadb-server-5.5  mysql-server/root_password_again select <%= node['mysql']['server_root_password'] %>
+mariadb-server-5.5  mysql-server/root_password select <%= node['mysql']['server_root_password'] %>
+mariadb-server-5.5  mysql-server/error_setting_password error
+mariadb-server-5.5  mysql-server-5.1/nis_warning  note
+mariadb-server-5.5  mysql-server-5.1/start_on_boot  boolean true
+mariadb-server-5.5  mysql-server-5.1/postrm_remove_databases  boolean false
+mariadb-server-5.5  mysql-server/password_mismatch  error
+mariadb-server-5.5  mysql-server/no_upgrade_when_using_ndb  error
+mariadb-galera-server-5.5 mariadb-server-5.5/really_downgrade boolean false
+mariadb-galera-server-5.5 mysql-server/error_setting_password error
+mariadb-galera-server-5.5 mysql-server-5.1/nis_warning  note
+mariadb-galera-server-5.5 mysql-server-5.1/start_on_boot  boolean true
+mariadb-galera-server-5.5 mysql-server-5.1/postrm_remove_databases  boolean false
+mariadb-galera-server-5.5 mysql-server/root_password  select  <%= node['mysql']['server_root_password'] %>
+mariadb-galera-server-5.5 mysql-server/root_password_again  select  <%= node['mysql']['server_root_password'] %>
+mariadb-galera-server-5.5 mysql-server/password_mismatch  error
+mariadb-galera-server-5.5 mysql-server/no_upgrade_when_using_ndb  error

@@ -1,0 +1,63 @@
+###############################
+## RethinkDB configuration
+###############################
+
+### Process options
+
+## User and group used to run rethinkdb
+## Command line default: do not change user or group
+## Init script default: rethinkdb user and group
+#runuser=rethinkdb
+#rungroup=rethinkdb
+
+## Stash the pid in this file when the process is running
+## Command line default: none
+## Init script default: /var/run/rethinkdb/<name>/pid_file (where <name> is the name of this config file without the extension)
+#pid-file=/var/run/rethinkdb/<%= @name %>/pid_file
+
+### File path options
+
+## Directory to store data and metadata
+## Command line default: ./rethinkdb_data
+## Init script default: /var/lib/rethinkdb/<name>/ (where <name> is the name of this file without the extension)
+#directory=/var/lib/rethinkdb/<%= @name %>/
+
+### Network options
+
+## Address of local interfaces to listen on when accepting connections
+## May be 'all' or an IP address, loopback addresses are enabled by default
+## Default: all local addresses
+bind=<%= @bind %>
+
+## The port for rethinkdb protocol for client drivers
+## Default: 28015 + port-offset
+driver-port=<%= node['rethinkdb']['driver_port'] + @port_offset %>
+
+## The port for receiving connections from other nodes
+## Default: 29015 + port-offset
+cluster-port=<%= node['rethinkdb']['cluster_port'] + @port_offset %>
+
+## The host:port of a node that rethinkdb will connect to
+## This option can be specified multiple times.
+## Default: none
+<% @join.each do |server, port| %>
+join=<%= server %>:<%= node['rethinkdb']['cluster_port'] + @port_offset %>
+<% end %>
+
+## All ports used locally will have this value added
+## Default: 0
+port-offset=<%= @port_offset %>
+
+### Web options
+
+## Port for the http admin console
+## Default: 8080 + port-offset
+http-port=<%= node['rethinkdb']['http_port'] + @port_offset %>
+
+### CPU options
+
+## The number of cores to use
+## Default: total number of cores of the CPU
+# cores=2
+
+machine-name=<%= node['hostname'].split('.').first %>

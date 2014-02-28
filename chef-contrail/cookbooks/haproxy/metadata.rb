@@ -1,0 +1,2 @@
+name "haproxy"
+depends "monit"

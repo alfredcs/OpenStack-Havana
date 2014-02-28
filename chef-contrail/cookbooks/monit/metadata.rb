@@ -1,0 +1,6 @@
+maintainer       "Abhishek Chanda"
+maintainer_email "abhishek@cloudscaling.com"
+description      "Installs and configures monit, also adds a provider for service to wrap it in monit health checks"
+version          "0.0.1"
+supports         "ubuntu"
+name             "monit"

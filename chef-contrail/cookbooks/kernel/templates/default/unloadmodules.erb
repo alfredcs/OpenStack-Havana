@@ -1,0 +1,5 @@
+#!/bin/bash
+# custom modules to unload from cs-chef metadata
+<% node['kernel']['blacklistmodules'].each do |modulename| -%>
+rmmod <%= modulename %> 
+<% end %>

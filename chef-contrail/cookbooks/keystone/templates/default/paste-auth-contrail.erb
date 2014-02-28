@@ -1,0 +1,5 @@
+auth_host=<%= node['openstack_config']['services']['keystone']['endpoint']['internal']['ip'] %>
+auth_protocol=<%= node['openstack_config']['services']['keystone']['endpoint']['internal']['protocol'] %>
+admin_user=admin
+admin_password=<%= node['openstack_config']['services'][@service]['keystone_service_password'] %>
+admin_tenant_name=admin

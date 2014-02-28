@@ -1,0 +1,111 @@
+/*
+ * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+ */
+
+var config = {};
+
+config.orchestration = {};
+config.orchestration.Manager = 'openstack'
+
+config.imageManager = {};
+config.imageManager.ip = '<%= node['quagga']['ospfd']['app_ecmp_ip'] %>';
+config.imageManager.port = '<%= node['glance']['api_bind_port'] %>'
+
+config.computeManager = {};
+config.computeManager.ip = '<%= node['quagga']['ospfd']['app_ecmp_ip'] %>';
+config.computeManager.port = '<%= node['keystone']['compute_port'] %>';
+
+config.networkManager = {};
+config.networkManager.ip = '<%= node['quagga']['ospfd']['app_ecmp_ip'] %>';
+config.networkManager.port = '<%= node['quantum']['port'] %>'
+
+config.identityManager = {};
+config.identityManager.ip = '<%= node['quagga']['ospfd']['app_ecmp_ip'] %>';
+config.identityManager.port = '<%= node['openstack_config']['services']['keystone']['endpoint']['internal']['port'] %>'
+
+config.storageManager = {};
+config.storageManager.ip = '<%= node['quagga']['ospfd']['app_ecmp_ip'] %>';
+config.storageManager.port = '8776'
+
+// VNConfig API server and port.
+config.cnfg = {};
+config.cnfg.server_ip = '<%= node['contrail']['api_server']['ip'] %>';
+config.cnfg.server_port = '<%= node['contrail']['api_server']['port']  %>';
+
+// Analytics API server and port.
+config.analytics = {};
+config.analytics.server_ip = '<%= node['contrail']['opserver']['ip'] %>';
+config.analytics.server_port = '<%= node['contrail']['opserver']['rest_port'] %>';
+
+/* Discovery Service */
+config.discoveryService = {};
+config.discoveryService.server_ip = '127.0.0.1';
+config.discoveryService.server_port = '5998';
+
+/* Job Server */
+config.jobServer = {};
+config.jobServer.server_ip = '127.0.0.1';
+config.jobServer.server_port = '<%= node['contrail']['webui']['job_port'] %>';
+
+/* Upload/Download Directory */
+config.files = {};
+config.files.download_path = '/tmp';
+
+/* Redis Server */
+config.redis = {};
+config.redis.server_port = '6379';
+config.redis.server_ip = '127.0.0.1';
+
+/* Cassandra Server */
+config.cassandra = {};
+config.cassandra.server_ips = [<%= node['cassandra']['nodes'].map {|n| "'#{n}'"}.join(',') %>];
+config.cassandra.server_port = '<%= node['cassandra']['port'] %>';
+config.cassandra.enable_edit = false;
+
+/* KUE Job Scheduler */
+config.kue = {};
+config.kue.ui_port = '<%= node['contrail']['webui']['kue_port'] %>'
+
+// Listen addresses for NodeJS Server
+config.webui_addresses = [<%= node['contrail']['webui']['listen_addresses'].map {|n| "'#{n}'"}.join(',') %>];
+
+// HTTP port for NodeJS Server.
+config.http_port = '<%= node['contrail']['webui']['http_port'] %>';
+
+// HTTPS port for NodeJS Server.
+config.https_port = '<%= node['contrail']['webui']['https_port'] %>';
+
+// Activate/Deactivate Login.
+config.require_auth = false;
+
+/* Number of node worker processes for cluster. */
+config.node_worker_count = 10;
+
+/* Number of Parallel Active Jobs with same type */
+config.maxActiveJobs = 10;
+
+/* Redis DB index for Web-UI */
+config.redisDBIndex = 1;
+
+/* WebUI Redis Server */
+config.redis_server_port = '6383';
+config.redis_server_ip = '127.0.0.1';
+
+/* Cache Expiry Time */
+config.cacheExpire = {};
+config.cacheExpire.flow_stat_time = 600; /* Seconds */
+config.cacheExpire.topo_tree_time = 600; /* Seconds */
+
+/* Logo File: Use complete path of logo file location */
+config.logo_file = '/usr/src/contrail/contrail-webui/webroot/img/juniper-networks-logo.png';
+
+/* Enable/disable Stat Query Links in Sidebar*/
+config.qe = {};
+config.qe.enable_stat_queries = false;
+
+/* Configure level of logs */
+config.logs = {};
+config.logs.level = 'debug';
+
+// Export this as a module.
+module.exports = config;

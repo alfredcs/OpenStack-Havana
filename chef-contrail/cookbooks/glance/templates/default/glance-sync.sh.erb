@@ -1,0 +1,12 @@
+#!/bin/bash
+processes=($(pgrep -f 'glance-sync -t'))
+if [ ${#processes[@]} -eq 0 ]; then
+  #TODO(jpg) Need a better way to get this
+  source /home/nova/tools/keystonecreds
+  token=$(keystone token-get | sed -En "/ id/ s/^.* ([a-f0-9]{3,}) .*$/\1/p")
+  <% node['glance']['peers'].each do |peer| %>
+    glance-sync -t $token sync <%= peer %> <%= node['glance']['filesystem_store_datadir'] %> &> /dev/null || echo "Peer at <%= peer %> is currently unavailable."
+  <% end %>
+else
+    echo "glance-sync is still running, waiting to fully sync before reissuing"
+fi

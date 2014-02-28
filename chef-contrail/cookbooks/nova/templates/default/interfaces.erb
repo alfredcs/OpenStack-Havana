@@ -1,0 +1,15 @@
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto <%= node[:nova][:pod_services_interface] %>
+iface <%= node[:nova][:pod_services_interface] %> inet dhcp
+
+auto <%= node['nova']['flat_network_bridge'] %>
+iface <%= node['nova']['flat_network_bridge'] %> inet static
+      address <%= node['nova']['flat_network_bridge_address'] %>
+      netmask <%= node['nova']['flat_network_bridge_netmask'] %>
+      bridge_ports <%= node['nova']['flat_network_bridge_target_device'] %>
+      bridge_stp off
+      bridge_maxwait 0
+      bridge_fd 0

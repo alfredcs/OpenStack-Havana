@@ -1,0 +1,7 @@
+#!/bin/sh
+
+printf "\n This host was provisioned by Substratum\n"
+printf "\n   - Block: <%= node['block_id'] %>\n"
+printf "\n   - Machine design: <%= node['design'] %>\n"
+printf "\n   - Software roles: <%= node['roles'].join(', ') %>\n"
+printf "\n"
