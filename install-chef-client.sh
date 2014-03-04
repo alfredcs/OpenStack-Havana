@@ -39,8 +39,8 @@ CHEF_FE_SSL_PORT=${CHEF_FE_SSL_PORT:-443}
 CHEF_URL=${CHEF_URL:-https://${MY_IP}:${CHEF_FE_SSL_PORT}}
 
 cat > /tmp/install_$HOST.sh <<EOF
-sudo apt-get install -y curl
-curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v ${CLIENT_VERSION}
+[ \`rpm -qa | grep -i curl|wc -l\` -lt 1 ] && sudo yum -y install curl
+[ \`rpm -qa | grep -i chef-$CLIENT_VERSION|wc -l\` -lt 1 ] && curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v ${CLIENT_VERSION}
 mkdir -p /etc/chef
 
 cp /tmp/validation.pem /etc/chef/validation.pem
@@ -67,6 +67,7 @@ fi
 
 scp -P $PORT ./validation.pem $HOST:/tmp/validation.pem
 scp -P $PORT /tmp/install_$HOST.sh $HOST:/tmp/install.sh
+scp -P $PORT /etc/hosts $HOST:/etc/hosts
 
 ssh -t -p $PORT $HOST sudo /bin/bash /tmp/install.sh
 ssh -t -p $PORT $HOST sudo chef-client
