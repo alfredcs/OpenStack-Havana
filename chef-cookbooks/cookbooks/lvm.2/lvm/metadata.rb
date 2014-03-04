@@ -1,0 +1,15 @@
+name              'lvm'
+maintainer        'Created by Opscode, Inc. Modified by Alfred Shen'
+maintainer_email  'alfred@yahoo.com'
+license           'Apache 2.0'
+description       'Installs lvm2 package'
+version           '1.0.6'
+
+supports 'centos'
+supports 'debian'
+supports 'redhat'
+supports 'sles'
+supports 'ubuntu'
+
+recipe 'lvm', 'Installs lvm2 package'
+recipe 'two_mount_points', 'Created two logic volumes wth ext4 and mount points'
