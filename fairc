@@ -108,14 +108,14 @@ echo -e "$*" >&2
 }
 
 function roll_back () {
-	[ $# -ne 2 ] && { echo "Usage: $0 <vg_name> <mount_point>"; exit 1; }
-	[ -f /sbin/mount ] && umount -all
-	[ $? -nq 0 ] && { log_error $LINENO " Roallback failure on umount -all"; exit 1; }
-	echo /sbin/vgremove --force $1
+	[ ! $1 || ! $2 ] && { echo "Usage: $0 <vg_name> <mount_point>"; exit 1; }
 	cat /etc/fstab| grep $1|grep -v ^#|grep . |awk '{print $2}'|while read aa
 	do
-		echo rm -rf $aa
+		echo umount $aa
+		[ $? -nq 0 ] && { log_error $LINENO " Roallback failure on umount -all"; exit 1; }
 	done 
 	echo sed -i '/$1/d' /etc/fstab
+	echo /sbin/vgremove --force $1
+	[ $? -nq 0 ] && { log_error $LINENO " Roallback failure on /sbin/vgremove --force $1"; exit 1; }
 	exit 1
 }

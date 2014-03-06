@@ -10,17 +10,17 @@ log_error $LINENO "missing $TOP_DIR/fairc "
 fi
 source $TOP_DIR/fairc
 DEBUG=0
-while getopts "hp:g:H:n:m:L:d:vVD" OPTION; do
+while getopts "hk:g:H:n:m:L:d:vVt:p:D" OPTION; do
 case "$OPTION" in
 h)
 	usage
 	exit 0
 	;;
-p)
+k)
 	KEY_FILE="$OPTARG"
 	;;
 g)
-	NAME_VGROUP="$OPTARG"
+	VG_GROUP_NAME="$OPTARG"
 	;;
 H)
 	HOST="$OPTARG"
@@ -43,6 +43,12 @@ v)
 V)
 	display_version
 	;;	
+t)
+        FS_TYPE="$OPTARG"
+        ;;
+p)
+        PKGS="$OPTARG"
+        ;;
 D)
 	DEBUG=1
         ;;
@@ -66,7 +72,7 @@ HOST=${HOST:-"localhost"}
 VG_GROUP_NAME=${VG_GROUP_NAME:-"vg00"}
 ENVIRONMENT=${ENVIRONMENT:-_default}
 FS_TYPE=${FS_TYPE:-"ext4"}
-DEVICE_NAMES=${DEVICE_NMAES:-"/dev/sdb /dev/sdc"}
+DEVICE_NAMES=${DEVICE_NAMES:-"/dev/sdb /dev/sdc"}
 PKGS=${PKGS:-"lvm2 lvm2-libs"}
 [ $DEBUG -ge 1 ] && ECHO="echo "
 for pkgs in ${PKGS}
@@ -74,14 +80,15 @@ do
 	if ! verify_package_exists ${pkgs};
 	then
 		echo "Package ${pkgs} was not installed successfully. Trying to reinstall..."
-		yum -y install ${pkgs}
+		${ECHO} yum -y install ${pkgs}
 	fi
 done
 [ `vgdisplay | grep ${VG_GROUP_NAME}|wc -l` -gt 0 ] && { log_error $LINENO "$VG_GROUP_NAME exist. Abort!"; exit 1; }
 #Create a volume group
 [ -f /sbin/vgcreate ] && ${ECHO} /sbin/vgcreate ${VG_GROUP_NAME} ${DEVICE_NAMES}
 [ $? -ne 0 ] && { echo "Failed: /sbin/vgcreate ${VG_GROUP_NAME} ${DEVICE_NAMES}"; exit 1; }
-STRIPES=`echo ${DEVICE_NAMES}| wc -w`
+#STRIPES=`echo ${DEVICE_NAMES}| wc -w`
+STRIPES=1
 if  [[ ${NAME_MOUNT_POINTS} =~ .*ora.* || ${NAME_MOUNT_POINTS} =~ .*Ora.* || ${NAME_MOUNT_POINTS} =~ .*database.* || ${NAME_MOUNT_POINTS} =~ .*db.* ]]
 then
 	if [ $LOG_SIZE ]; then
@@ -93,7 +100,7 @@ then
 	fi
 	[ -f /sbin/mkfs ] && ${ECHO} /sbin/mkfs -t ${FS_TYPE} /dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_log
 	[ $? -ne 0 ] && { log_error $LINENO " mkfs -t ${FS_TYPE} /dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_log"; roll_back ${VG_GROUP_NAME} ${NAME_MOUNT_POINTS}_log; }
-	[[ `grep ${NAME_MOUNT_POINTS}_log /etc/fstab | wc -l` -lt 1 && ! ${DEBUG} ]] && echo "/dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_log	/${NAME_MOUNT_POINTS}_log  ext4 noatime,nodiratime 0 2" >> /etc/fstab
+	[[ `grep ${NAME_MOUNT_POINTS}_log /etc/fstab | wc -l` -lt 1 && ${DEBUG} -lt 1 ]] && echo "/dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_log	/${NAME_MOUNT_POINTS}_log  ext4 noatime,nodiratime 0 2" >> /etc/fstab
 	[ -f /bin/mkdir ] && ${ECHO} /bin/mkdir -p /${NAME_MOUNT_POINTS}_log
 fi
 INDEX=0
@@ -111,7 +118,7 @@ do
 	[ -f /sbin/mkfs ] && ${ECHO} /sbin/mkfs -t ${FS_TYPE} /dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_${INDEXX}
 	[ $? -ne 0 ] && { log_error $LINENO " mkfs -t ${FS_TYPE} /dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_${INDEXX}"; roll_back ${VG_GROUP_NAME} ${NAME_MOUNT_POINTS}_${INDEXX}; }
 	#update /etc/fstab
-	[[ `grep ${NAME_MOUNT_POINTS}_${INDEXX} /etc/fstab | wc -l` -lt 1 && ! ${DEBUG} ]] && echo "/dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_${INDEXX}	/${NAME_MOUNT_POINTS}_${INDEXX}	ext4 noatime,nodiratime 0 2" >> /etc/fstab
+	[[ `grep ${NAME_MOUNT_POINTS}_${INDEXX} /etc/fstab | wc -l` -lt 1 && ${DEBUG} -lt 1 ]] && echo "/dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_${INDEXX}	/${NAME_MOUNT_POINTS}_${INDEXX}	ext4 noatime,nodiratime 0 2" >> /etc/fstab
 	#mount 
 	[ -f /bin/mkdir ] && ${ECHO} /bin/mkdir -p /${NAME_MOUNT_POINTS}_${INDEXX}
 	#INDEX=$[${INDEX}+1]
