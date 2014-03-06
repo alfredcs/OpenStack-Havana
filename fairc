@@ -1,0 +1,121 @@
+function usage() {
+cat <<EOF
+usage: $0 options
+
+This script will create logic volume sbased on predefined templates.
+
+OPTIONS:
+  -h --help Show this message
+  -v --verbose Verbose output
+  -V --version Output the version of this script
+
+ARGUMENTS:
+  -r --role=[control | compute | network]
+         Specify the role of the node - defaults to "compute"
+  -i --ip=<Control Server IP>
+         Specify the COntrol Server IP - defaults to "0.0.0.0"
+  -a --admin=<E2 admin username>
+	Specify tenant admin username for the first tenant
+  -d1 --dns1=<DNS server1 IP>
+        Specify the first DNSsserver IP address
+  -d2 --dns2=<DNS server2 IP>
+        Specify the second DNSsserver IP address
+  -d --domain=<domain name>
+        Specify the domainname for VMs
+  -t --tenant=<Tenant_name>
+Specify tenant name to be created during the control node stand up
+  -p --passwordi=<mysql root password>
+Specify initial mysql root password. Defailt is "password"
+  -f --fixed_ip_range=<IP range for VM subnet>
+Specify the IP range and subnet mask in 1.1.1.0/24 format
+  -b --bridge=<Bridge name for nova network>
+Specify bridge name for the nova network
+  -n --nic=<NIC name for the bridge>
+Specify NIV i.e. eth2 for the bridge communication
+  -c --clean
+         Specify if to remove and purge the previousely installed pkgs
+  -rr --rerun
+         Removes packages and reinstalls them
+         Can be used to adjust IP/password information
+EOF
+}
+
+function display_version() {
+cat <<EOF
+$0 (version: $VERSION)
+EOF
+}
+
+function randpass() {
+  [ "$2" == "0" ] && CHAR="[:alnum:]" || CHAR="[:graph:]"
+    cat /dev/urandom | tr -cd "$CHAR" | head -c ${1:-32}
+    echo
+}
+
+function verify_package_exists() {
+  if [[ -z $VERBOSE ]]; then
+      rpm -q $1 --quiet
+  else
+      rpm -q $1
+  fi
+  return $?
+}
+
+function log_info
+{
+    ((__log_level < __log_level_info)) || __log_dummy "INFO" "$*"
+}
+
+# A note message is usually a key log entry indicates significant progress,
+# cleare last error to avoid confusing error message in unmatched steps
+#
+function log_note
+{
+    __log_last_error=""
+    ((__log_level < __log_level_info)) || __log_dummy "NOTE" "$(date '+%F %T %z') $*"
+}
+
+function log_warn
+{
+    ((__log_level < __log_level_info)) || __log_dummy "WARN" "$(date '+%F %T %z') $*"
+}
+
+function log_error
+{
+    __log_last_error="$*"
+    ((__log_level < __log_level_quiet)) || __log_dummy "ERROR" "$(date '+%F %T') Line:$*"
+}
+
+# Return the last message passed to log_error(), this is useful when upper
+# caller wants to fetch the message to send an email report
+#
+function log_last_error
+{
+    echo "$__log_last_error"
+}
+
+function log_delimit
+{
+    local d=$(printf "%72s" "")
+    log_info "${d// /-}"
+}
+
+function __log_dummy
+{
+    printf "%-5s " "${1?}" >&2
+    shift
+echo -e "$*" >&2
+}
+
+function roll_back () {
+	[ $# -ne 2 ] && { echo "Usage: $0 <vg_name> <mount_point>"; exit 1; }
+	[ -f /sbin/mount ] && umount -all
+	[ $? -nq 0 ] && { log_error $LINENO " Roallback failure on umount -all"; exit 1; }
+	echo /sbin/vgremove --force $1
+	cat /etc/fstab| grep $1|grep -v ^#|grep . |awk '{print $2}'|while read aa
+	do
+		echo rm -rf $aa
+	done 
+	echo sed -i '/$1/d' /etc/fstab
+	exit 1
+}
