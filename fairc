@@ -1,42 +1,42 @@
+#
+# Copyright 2014 Alfred Shen
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 function usage() {
 cat <<EOF
 usage: $0 options
 
 This script will create logic volume sbased on predefined templates.
 
+Example:
+	lvm.bash -D -g vg100 -d "/dev/sdb /dev/sdc /dev/sde" -n 5 -L 5G -t ext3 -p "lvm2 lvm2-libs createrepo" -m test 
+
 OPTIONS:
   -h --help Show this message
   -v --verbose Verbose output
   -V --version Output the version of this script
+  -k --Private key file for remote ssh login without a password
+  -g --Volume group name. Default is "vg00" 
+  -H --Remote hostname or IP to run the script. Default is "localhost"
+  -n --Number of the logical volumes to be created. Default is 3
+  -m --Mount point names. Default is "ora"
+  -L --Log volume size for database log. Default is 2% if volume name "ora" or "database" is used
+  -d --Physical devies names. Default is "/dev/sdb /dev/sdc"
+  -t --File system typw. Default is "ext4"
+  -p --Install additional packages. Default are "lvm2 and lvm2-libs"
+  -D --Denug on/off flag. Default is "off"
 
-ARGUMENTS:
-  -r --role=[control | compute | network]
-         Specify the role of the node - defaults to "compute"
-  -i --ip=<Control Server IP>
-         Specify the COntrol Server IP - defaults to "0.0.0.0"
-  -a --admin=<E2 admin username>
-	Specify tenant admin username for the first tenant
-  -d1 --dns1=<DNS server1 IP>
-        Specify the first DNSsserver IP address
-  -d2 --dns2=<DNS server2 IP>
-        Specify the second DNSsserver IP address
-  -d --domain=<domain name>
-        Specify the domainname for VMs
-  -t --tenant=<Tenant_name>
-Specify tenant name to be created during the control node stand up
-  -p --passwordi=<mysql root password>
-Specify initial mysql root password. Defailt is "password"
-  -f --fixed_ip_range=<IP range for VM subnet>
-Specify the IP range and subnet mask in 1.1.1.0/24 format
-  -b --bridge=<Bridge name for nova network>
-Specify bridge name for the nova network
-  -n --nic=<NIC name for the bridge>
-Specify NIV i.e. eth2 for the bridge communication
-  -c --clean
-         Specify if to remove and purge the previousely installed pkgs
-  -rr --rerun
-         Removes packages and reinstalls them
-         Can be used to adjust IP/password information
 EOF
 }
 

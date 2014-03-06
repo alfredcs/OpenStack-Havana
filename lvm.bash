@@ -1,4 +1,20 @@
 #!/bin/bash
+# 
+# Copyright 2014 Alfred Shen 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+VERSION="0.0.9"
 if [ "$(id -u)" != "0" ]; then
 	echo "This script must be run as root" 1>&2
 	exit 1
@@ -42,6 +58,7 @@ v)
 	;;
 V)
 	display_version
+	exit 0
 	;;	
 t)
         FS_TYPE="$OPTARG"
@@ -87,15 +104,14 @@ done
 #Create a volume group
 [ -f /sbin/vgcreate ] && ${ECHO} /sbin/vgcreate ${VG_GROUP_NAME} ${DEVICE_NAMES}
 [ $? -ne 0 ] && { echo "Failed: /sbin/vgcreate ${VG_GROUP_NAME} ${DEVICE_NAMES}"; exit 1; }
-#STRIPES=`echo ${DEVICE_NAMES}| wc -w`
-STRIPES=1
+STRIPES=`echo ${DEVICE_NAMES}| wc -w`
 if  [[ ${NAME_MOUNT_POINTS} =~ .*ora.* || ${NAME_MOUNT_POINTS} =~ .*Ora.* || ${NAME_MOUNT_POINTS} =~ .*database.* || ${NAME_MOUNT_POINTS} =~ .*db.* ]]
 then
 	if [ $LOG_SIZE ]; then
-		[ -f /sbin/lvcreate ] && ${ECHO} /sbin/lvcreate -l ${LOG_SIZE} -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_log ${VG_GROUP_NAME}
+		[ -f /sbin/lvcreate ] && ${ECHO} /sbin/lvcreate -t raid10 -l ${LOG_SIZE} -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_log ${VG_GROUP_NAME}
 		[ $? -ne 0 ] && { log_error $LINENO " /sbin/lvcreate -l ${LOG_SIZE} -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_log ${VG_GROUP_NAME}"; roll_back ${VG_GROUP_NAME} ${NAME_MOUNT_POINTS}_log; }
 	else
-		[ -f /sbin/lvcreate ] && ${ECHO} /sbin/lvcreate -l 2%VG -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_log ${VG_GROUP_NAME}
+		[ -f /sbin/lvcreate ] && ${ECHO} /sbin/lvcreate -t raid10 -l 2%VG -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_log ${VG_GROUP_NAME}
 		[ $? -ne 0 ] && { log_error $LINENO " /sbin/lvcreate -l 2%VG -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_log ${VG_GROUP_NAME}"; roll_back ${VG_GROUP_NAME} ${NAME_MOUNT_POINTS}_log; }
 	fi
 	[ -f /sbin/mkfs ] && ${ECHO} /sbin/mkfs -t ${FS_TYPE} /dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_log
@@ -112,7 +128,12 @@ do
 	[ $INDEX -lt 10 ] && INDEXX=0${INDEX}
 	let NN="${NUM_MOUNT_POINTS}-1"
 	[ ${INDEX} -eq  ${NN} ] && STRIPES=1
-	[ -f /sbin/lvcreate ] && ${ECHO} /sbin/lvcreate -l ${SPACE}%FREE -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_${INDEXX} ${VG_GROUP_NAME}
+	[ -f /sbin/lvcreate ] && ${ECHO} /sbin/lvcreate -t -l ${SPACE}%FREE -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_${INDEXX} ${VG_GROUP_NAME}
+	if [ $? -eq 0 ]; then
+		${ECHO} /sbin/lvcreate -l ${SPACE}%FREE -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_${INDEXX} ${VG_GROUP_NAME}
+	else
+		${ECHO} /sbin/lvcreate -l ${SPACE}%FREE -i 1 -n ${NAME_MOUNT_POINTS}_${INDEXX} ${VG_GROUP_NAME}
+	fi
 	[ $? -ne 0 ] && { log_error $LINENO " /sbin/lvcreate -l ${SPACE}%FREE -i ${STRIPES} -n ${NAME_MOUNT_POINTS}_${INDEXX} ${VG_GROUP_NAME}"; roll_back ${VG_GROUP_NAME} ${NAME_MOUNT_POINTS}_${INDEXX}; }
 	#mkfs -t ext4
 	[ -f /sbin/mkfs ] && ${ECHO} /sbin/mkfs -t ${FS_TYPE} /dev/${VG_GROUP_NAME}/${NAME_MOUNT_POINTS}_${INDEXX}
